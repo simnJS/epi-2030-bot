@@ -1,80 +1,41 @@
-import { ApplyOptions } from '@sapphire/decorators';
-import { Command } from '@sapphire/framework';
-import { ApplicationCommandType, ApplicationIntegrationType, InteractionContextType, Message } from 'discord.js';
+import { ApplyOptions } from "@sapphire/decorators";
+import { Awaitable, Command } from "@sapphire/framework";
+import { EmbedBuilder, MessageFlags } from "discord.js";
+
+
+
 
 @ApplyOptions<Command.Options>({
-	description: 'ping pong'
+    description: "Ping command to check the bot's responsiveness"
 })
-export class UserCommand extends Command {
-	// Register Chat Input and Context Menu command
-	public override registerApplicationCommands(registry: Command.Registry) {
-		// Create shared integration types and contexts
-		// These allow the command to be used in guilds and DMs
-		const integrationTypes: ApplicationIntegrationType[] = [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall];
-		const contexts: InteractionContextType[] = [
-			InteractionContextType.BotDM,
-			InteractionContextType.Guild,
-			InteractionContextType.PrivateChannel
-		];
+export class PingCommand extends Command {
+    public override registerApplicationCommands(registry : Command.Registry): Awaitable<void> {
 
-		// Register Chat Input command
-		registry.registerChatInputCommand({
-			name: this.name,
-			description: this.description,
-			integrationTypes,
-			contexts
-		});
+        registry.registerChatInputCommand(
+            (builder) =>
+                builder
+                    .setName("ping")
+                    .setDescription(this.description),
+                { guildIds: ["1391769906944409662"]}
+        )   
+    }
 
-		// Register Context Menu command available from any message
-		registry.registerContextMenuCommand({
-			name: this.name,
-			type: ApplicationCommandType.Message,
-			integrationTypes,
-			contexts
-		});
+    public override async chatInputRun(interaction : Command.ChatInputCommandInteraction) {
 
-		// Register Context Menu command available from any user
-		registry.registerContextMenuCommand({
-			name: this.name,
-			type: ApplicationCommandType.User,
-			integrationTypes,
-			contexts
-		});
-	}
+        const embed = new EmbedBuilder()
+            .setTitle("Bot Latency")
+			.setColor("DarkRed")
+			.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false })});
 
-	// Message command
-	public override async messageRun(message: Message) {
-		return this.sendPing(message);
-	}
+        const message = await interaction.reply({embeds: [embed], flags : MessageFlags.Ephemeral});
 
-	// Chat Input (slash) command
-	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-		return this.sendPing(interaction);
-	}
+        const wsPing = this.container.client.ws.ping;
+        const apiPing = message.createdTimestamp - interaction.createdTimestamp;
 
-	// Context Menu command
-	public override async contextMenuRun(interaction: Command.ContextMenuCommandInteraction) {
-		return this.sendPing(interaction);
-	}
-
-	private async sendPing(interactionOrMessage: Message | Command.ChatInputCommandInteraction | Command.ContextMenuCommandInteraction) {
-		const pingMessage =
-			interactionOrMessage instanceof Message
-				? interactionOrMessage.channel?.isSendable() && (await interactionOrMessage.channel.send({ content: 'Ping?' }))
-				: await interactionOrMessage.reply({ content: 'Ping?', fetchReply: true });
-
-		if (!pingMessage) return;
-
-		const content = `Pong! Bot Latency ${Math.round(this.container.client.ws.ping)}ms. API Latency ${
-			pingMessage.createdTimestamp - interactionOrMessage.createdTimestamp
-		}ms.`;
-
-		if (interactionOrMessage instanceof Message) {
-			return pingMessage.edit({ content });
-		}
-
-		return interactionOrMessage.editReply({
-			content
-		});
-	}
+        await interaction.editReply({
+            embeds: [
+                embed.setDescription(`WebSocket Ping: ${wsPing}ms\nAPI Ping: ${apiPing}ms`)
+            ]
+        });   
+    }
 }
