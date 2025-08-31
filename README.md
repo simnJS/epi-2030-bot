@@ -22,6 +22,26 @@ npm run watch:start
 
 You can also run the bot with `npm dev`, this will first build your code and then run `node ./dist/index.js`. But this is not the recommended way to run a bot in production.
 
+
+### Docker
+
+You can also run the bot using [Docker](https://docker.com).
+You need a ```.env``` file like this:
+```.dotenv
+DISCORD_TOKEN="your_discord_token_here"
+OPENAI_API_KEY="your_openai_token_here"
+```
+
+Then, execute this command:
+```shell
+docker-compose up --build -d
+```
+
+To stop the bot, execute this command:
+```shell
+docker-compose down
+```
+
 ## License
 
 Dedicated to the public domain via the [Unlicense], courtesy of the Sapphire Community and its contributors.
