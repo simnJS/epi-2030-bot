@@ -1,7 +1,8 @@
 import './lib/setup';
 
-import { LogLevel, SapphireClient } from '@sapphire/framework';
+import { container, LogLevel, SapphireClient } from '@sapphire/framework';
 import { GatewayIntentBits } from 'discord.js';
+import OpenAI from 'openai';
 
 const client = new SapphireClient({
 	defaultPrefix: '!',
@@ -24,5 +25,17 @@ const main = async () => {
 		process.exit(1);
 	}
 };
+
+const openai = new OpenAI({
+	apiKey: process.env.OPENAI_API_KEY
+})
+
+declare module '@sapphire/pieces' {
+	interface Container {
+		openai: OpenAI;
+	}
+}
+
+container.openai = openai;
 
 void main();
