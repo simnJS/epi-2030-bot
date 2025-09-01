@@ -60,62 +60,54 @@ export class FormatChannelCommand extends Command {
 
     private async getChannelTextName(channelName: string): Promise<string> {
 
-        // const response = await this.container.openai.responses.create({
-        //     prompt: {
-        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
-        //         "version": "8"
-        //     },
-        //     input: channelName
-        // });
+        const response = await this.container.openai.responses.create({
+            prompt: {
+                "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+                "version": "8"
+            },
+            input: channelName
+        });
 
-        // return response.output_text
-
-        return "☑️・" + channelName.toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g, "");
+        return response.output_text
     }
 
     private async getChannelVoiceName(channelName: string): Promise<string> {
 
-        // const response = await this.container.openai.responses.create({
-        //     prompt: {
-        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
-        //         "version": "8"
-        //     },
-        //     input: channelName
-        // });
+        const response = await this.container.openai.responses.create({
+            prompt: {
+                "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+                "version": "8"
+            },
+            input: channelName
+        });
 
-        // return response.output_text
-
-        return "☑️・" + channelName;
+        return response.output_text
     }
 
     private async getCategoryName(channelName: string): Promise<string> {
 
-        // const response = await this.container.openai.responses.create({
-        //     prompt: {
-        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
-        //         "version": "8"
-        //     },
-        //     input: channelName
-        // });
+        const response = await this.container.openai.responses.create({
+            prompt: {
+                "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+                "version": "8"
+            },
+            input: channelName
+        });
 
-        // return response.output_text
-
-        return "☑️ | Ça " + channelName + " | ☑️";
+        return response.output_text
     }
 
     private async getOtherName(channelName: string): Promise<string> {
 
-        // const response = await this.container.openai.responses.create({
-        //     prompt: {
-        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
-        //         "version": "8"
-        //     },
-        //     input: channelName
-        // });
+        const response = await this.container.openai.responses.create({
+            prompt: {
+                "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+                "version": "8"
+            },
+            input: channelName
+        });
 
-        // return response.output_text
-
-        return "☑️・" + channelName;
+        return response.output_text
     }
 
 }
