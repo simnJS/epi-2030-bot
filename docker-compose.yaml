@@ -1,0 +1,14 @@
+services:
+  discord-bot:
+    build: .
+    container_name: sapphire-bot
+    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
