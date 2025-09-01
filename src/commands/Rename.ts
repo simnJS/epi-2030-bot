@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Awaitable, Command } from "@sapphire/framework";
-import { EmbedBuilder, MessageFlags } from "discord.js";
+import { EmbedBuilder, MessageFlags, GuildMember, PermissionFlagsBits  } from "discord.js";
 
 @ApplyOptions<Command.Options>({
     description: "Command to rename a user"
@@ -28,7 +28,9 @@ export class PingCommand extends Command {
 
     public override async chatInputRun(interaction : Command.ChatInputCommandInteraction) {
 
-        if (interaction.user.id !== "594552679397851137") {
+        const initialmember = interaction.member as GuildMember;
+
+        if (!initialmember.permissions.has(PermissionFlagsBits.Administrator)) {
             const embedfail = new EmbedBuilder()
                 .setColor("DarkRed")
                 .setTitle("Permission denied")
@@ -48,13 +50,22 @@ export class PingCommand extends Command {
             return interaction.reply({embeds: [embedfail], flags : MessageFlags.Ephemeral});
         }
 
-        await member.setNickname(newName).catch();
+        await member.setNickname(newName).catch(
+            () => {
+                const embedfail = new EmbedBuilder()
+                    .setColor("DarkRed")
+                    .setTitle("Failed to add name")
+                    .setDescription("Maybe the bot does not have permission to change this user's nickname")
+                    .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false })});
+                interaction.reply({embeds: [embedfail], flags : MessageFlags.Ephemeral});
+            }
+        );
 
         const embed = new EmbedBuilder()
                 .setColor("Green")
                 .setTitle("User renamed")
                 .setDescription(`Successfully renamed ${targetUser.tag} to ${newName}`)
                 .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false })});
-        return interaction.reply({embeds: [embed], flags : MessageFlags.Ephemeral});
+        return interaction.reply({embeds: [embed]});
     }
 }
