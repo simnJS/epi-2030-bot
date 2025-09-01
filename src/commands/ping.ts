@@ -24,7 +24,7 @@ export class PingCommand extends Command {
 
         const embed = new EmbedBuilder()
             .setTitle("Bot Latency")
-			.setColor("DarkRed")
+			.setColor("Blue")
 			.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false })});
 
         const message = await interaction.reply({embeds: [embed], flags : MessageFlags.Ephemeral});

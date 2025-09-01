@@ -6,11 +6,11 @@ import { EmbedBuilder, GuildChannel, TextChannel } from "discord.js";
 @ApplyOptions<Listener.Options>({
     event: Events.ChannelCreate
 })
-export class ChannelCreateNamingListener extends Listener<typeof Events.ChannelCreate> {
+export class VoiceCreateNamingListener extends Listener<typeof Events.ChannelCreate> {
 
     public async run(channel: GuildChannel) {
 
-        if (channel.type == 0) {
+        if (channel.type == 2) {
             const beforeEmbed = new EmbedBuilder()
             .setTitle("Generating channel name")
 			.setColor("DarkRed")
