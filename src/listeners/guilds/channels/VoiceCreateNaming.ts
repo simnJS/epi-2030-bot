@@ -6,11 +6,11 @@ import { EmbedBuilder, GuildChannel, TextChannel } from "discord.js";
 @ApplyOptions<Listener.Options>({
     event: Events.ChannelCreate
 })
-export class ChannelCreateNamingListener extends Listener<typeof Events.ChannelCreate> {
+export class VoiceCreateNamingListener extends Listener<typeof Events.ChannelCreate> {
 
     public async run(channel: GuildChannel) {
 
-        if (channel.type == 0) {
+        if (channel.type == 2) {
             const beforeEmbed = new EmbedBuilder()
             .setTitle("Generating channel name")
 			.setColor("DarkRed")
@@ -25,7 +25,7 @@ export class ChannelCreateNamingListener extends Listener<typeof Events.ChannelC
             await message.edit({embeds: [new EmbedBuilder()
                 .setTitle("Channel name generated")
                 .setColor("Green")
-                .setDescription(`The new channel name is: ${ChannelName}`)
+                .setDescription(`The new voice channel name is: ${ChannelName}`)
             ]});
         }
     }
@@ -41,7 +41,7 @@ export class ChannelCreateNamingListener extends Listener<typeof Events.ChannelC
         // });
 
         // return response.output_text
-        return "☑️・" + channelName.toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g, "");
+        return "☑️・" + channelName;
     }
 
 }

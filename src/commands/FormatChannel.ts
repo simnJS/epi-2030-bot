@@ -1,12 +1,12 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Awaitable, Command } from "@sapphire/framework";
-import { TextChannel } from "discord.js";
+import { GuildChannel } from "discord.js";
 
 
 
 
 @ApplyOptions<Command.Options>({
-    description: "A command to format the name of the channel using openAI"
+    description: "A command to format the name of the channel/category using openAI"
 })
 export class FormatChannelCommand extends Command {
     public override registerApplicationCommands(registry : Command.Registry): Awaitable<void> {
@@ -15,41 +15,105 @@ export class FormatChannelCommand extends Command {
             (builder) =>
                 builder
                     .setName("format-channel")
-                    .setDescription(this.description),
-                    
-
+                    .setDescription(this.description)
+                    .addChannelOption(option =>
+                        option.setName('channel')
+                            .setDescription('The channel to format')
+                            .setRequired(false)
+                    ),
                 { guildIds: ["1391769906944409662"]}
         )   
     }
 
     public override async chatInputRun(interaction : Command.ChatInputCommandInteraction) {
 
-        const channel = interaction.channel as TextChannel;
+        const channel = interaction.options.getChannel('channel') as GuildChannel ?? (interaction.channel as GuildChannel)
 
         if (!channel) {
-            return interaction.reply({ content: "This command can only be used in a text channel.", ephemeral: true });
+            return interaction.reply({ content: "Channel not found or cant be rename", ephemeral: true });
         }
 
-        const newChannelName = await this.getChannelName(channel.name);
+        let newChannelName = channel.name;
+        if (channel.type == 0) {
+            newChannelName = await this.getChannelTextName(channel.name);
+        } else if (channel.type == 2) {
+            newChannelName = await this.getChannelVoiceName(channel.name);
+        } else if (channel.type == 4) {
+            newChannelName = await this.getCategoryName(channel.name);
+        } else {
+            newChannelName = await this.getOtherName(channel.name);
+        }
 
-        await channel.setName(newChannelName).catch(() => {});
+        await channel.setName(newChannelName).catch(err => {
+            console.error(`Failed to rename channel ${channel.name}:`, err);
+            interaction.followUp({ content: `Erreur: ${err.message}`, ephemeral: true }).catch(() => {});
+        });
+
+        console.log(`Channel ${channel.name} renamed to ${newChannelName}`);
 
         await interaction.reply({ content: `The channel has been renamed to: ${newChannelName}`, ephemeral: true });
 
         return;
     }
 
-    private async getChannelName(channelName: string): Promise<string> {
+    private async getChannelTextName(channelName: string): Promise<string> {
 
-        const response = await this.container.openai.responses.create({
-            prompt: {
-                "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
-                "version": "8"
-            },
-            input: channelName
-        });
+        // const response = await this.container.openai.responses.create({
+        //     prompt: {
+        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+        //         "version": "8"
+        //     },
+        //     input: channelName
+        // });
 
-        return response.output_text
+        // return response.output_text
+
+        return "☑️・" + channelName.toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g, "");
+    }
+
+    private async getChannelVoiceName(channelName: string): Promise<string> {
+
+        // const response = await this.container.openai.responses.create({
+        //     prompt: {
+        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+        //         "version": "8"
+        //     },
+        //     input: channelName
+        // });
+
+        // return response.output_text
+
+        return "☑️・" + channelName;
+    }
+
+    private async getCategoryName(channelName: string): Promise<string> {
+
+        // const response = await this.container.openai.responses.create({
+        //     prompt: {
+        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+        //         "version": "8"
+        //     },
+        //     input: channelName
+        // });
+
+        // return response.output_text
+
+        return "☑️ | Ça " + channelName + " | ☑️";
+    }
+
+    private async getOtherName(channelName: string): Promise<string> {
+
+        // const response = await this.container.openai.responses.create({
+        //     prompt: {
+        //         "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
+        //         "version": "8"
+        //     },
+        //     input: channelName
+        // });
+
+        // return response.output_text
+
+        return "☑️・" + channelName;
     }
 
 }
