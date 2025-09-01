@@ -22,10 +22,12 @@ export class VoiceCreateNamingListener extends Listener<typeof Events.ChannelCre
 
             await channel.setName(ChannelName).catch(() => {});
 
+            const botUser = this.container.client.user;
             await message.edit({embeds: [new EmbedBuilder()
                 .setTitle("Channel name generated")
                 .setColor("Green")
-                .setDescription(`The new voice channel name is: ${ChannelName}`)
+                .setDescription(`The new channel name is: ${ChannelName}`)
+                .setAuthor({ name: botUser?.username ?? 'Bot', iconURL: botUser?.displayAvatarURL({ forceStatic: false }) })
             ]});
         }
     }

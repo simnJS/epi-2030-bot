@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Awaitable, Command } from "@sapphire/framework";
-import { GuildChannel } from "discord.js";
+import { GuildChannel, EmbedBuilder } from "discord.js";
 
 
 
@@ -30,7 +30,11 @@ export class FormatChannelCommand extends Command {
         const channel = interaction.options.getChannel('channel') as GuildChannel ?? (interaction.channel as GuildChannel)
 
         if (!channel) {
-            return interaction.reply({ content: "Channel not found or cant be rename", ephemeral: true });
+            const embedfail = new EmbedBuilder()
+                .setColor("DarkRed")
+                .setTitle("Channel not found or cant be rename")
+                .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false })});
+            return interaction.reply({embeds: [embedfail]});
         }
 
         let newChannelName = channel.name;
@@ -44,16 +48,14 @@ export class FormatChannelCommand extends Command {
             newChannelName = await this.getOtherName(channel.name);
         }
 
-        await channel.setName(newChannelName).catch(err => {
-            console.error(`Failed to rename channel ${channel.name}:`, err);
-            interaction.followUp({ content: `Erreur: ${err.message}`, ephemeral: true }).catch(() => {});
-        });
+        await channel.setName(newChannelName).catch();
 
-        console.log(`Channel ${channel.name} renamed to ${newChannelName}`);
-
-        await interaction.reply({ content: `The channel has been renamed to: ${newChannelName}`, ephemeral: true });
-
-        return;
+        const embed = new EmbedBuilder()
+                .setColor("Green")
+                .setTitle("Channel name update")
+                .setDescription('The new channel name is: '+ channel.name)
+                .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false })});
+        return interaction.reply({embeds: [embed]});
     }
 
     private async getChannelTextName(channelName: string): Promise<string> {
