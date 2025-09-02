@@ -5,7 +5,7 @@ import { EmbedBuilder, MessageFlags, GuildMember, PermissionFlagsBits  } from "d
 @ApplyOptions<Command.Options>({
     description: "Command to rename a user"
 })
-export class PingCommand extends Command {
+export class RenameCommand extends Command {
     public override registerApplicationCommands(registry : Command.Registry): Awaitable<void> {
 
         registry.registerChatInputCommand(
