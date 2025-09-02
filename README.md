@@ -50,6 +50,18 @@ To stop the bot, execute this command:
 docker-compose down
 ```
 
+## Contributing
+
+We welcome contributions from all members of the Epitech 2030 Lyon promo! 🎉
+
+Whether you want to:
+- Add new Discord commands
+- Improve existing features
+- Fix bugs
+- Enhance documentation
+
+Please check out our [Contributing Guide](CONTRIBUTING.md) for detailed instructions on how to get started, set up your development environment, and submit your contributions.
+
 ## License
 
 Dedicated to the public domain via the
