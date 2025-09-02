@@ -5,7 +5,7 @@ import { EmbedBuilder, MessageFlags, GuildMember, PermissionFlagsBits  } from "d
 @ApplyOptions<Command.Options>({
     description: "Command to add name to pseudo"
 })
-export class PingCommand extends Command {
+export class AddNameCommand extends Command {
     public override registerApplicationCommands(registry : Command.Registry): Awaitable<void> {
 
         registry.registerChatInputCommand(
