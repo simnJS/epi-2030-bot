@@ -1,48 +1,46 @@
-import { ApplyOptions } from "@sapphire/decorators";
-import { Events, Listener } from "@sapphire/framework";
-import { EmbedBuilder, GuildChannel, TextChannel } from "discord.js";
-
+import { ApplyOptions } from '@sapphire/decorators';
+import { Events, Listener } from '@sapphire/framework';
+import { EmbedBuilder, GuildChannel, TextChannel } from 'discord.js';
 
 @ApplyOptions<Listener.Options>({
-    event: Events.ChannelCreate
+	event: Events.ChannelCreate
 })
 export class ChannelCreateNamingListener extends Listener<typeof Events.ChannelCreate> {
+	public async run(channel: GuildChannel) {
+		if (channel.type == 0) {
+			const beforeEmbed = new EmbedBuilder()
+				.setTitle('Generating channel name')
+				.setColor('DarkRed')
+				.setDescription('Please wait while I generate the correct name for the new channel...');
 
-    public async run(channel: GuildChannel) {
+			const message = await (channel as TextChannel).send({ embeds: [beforeEmbed] });
 
-        if (channel.type == 0) {
-            const beforeEmbed = new EmbedBuilder()
-            .setTitle("Generating channel name")
-			.setColor("DarkRed")
-            .setDescription("Please wait while I generate the correct name for the new channel...")
+			const ChannelName = await this.getChannelName(channel.name);
 
-            const message = await (channel as TextChannel).send({embeds: [beforeEmbed]});
+			await channel.setName(ChannelName).catch(() => {});
 
-            const ChannelName = await this.getChannelName(channel.name);
+			const botUser = this.container.client.user;
+			await message.edit({
+				embeds: [
+					new EmbedBuilder()
+						.setTitle('Channel name generated')
+						.setColor('Green')
+						.setDescription(`The new channel name is: ${ChannelName}`)
+						.setAuthor({ name: botUser?.username ?? 'Bot', iconURL: botUser?.displayAvatarURL({ forceStatic: false }) })
+				]
+			});
+		}
+	}
 
-            await channel.setName(ChannelName).catch(() => {});
+	private async getChannelName(channelName: string): Promise<string> {
+		const response = await this.container.openai.responses.create({
+			prompt: {
+				id: 'pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a',
+				version: '8'
+			},
+			input: channelName
+		});
 
-            const botUser = this.container.client.user;
-            await message.edit({embeds: [new EmbedBuilder()
-                .setTitle("Channel name generated")
-                .setColor("Green")
-                .setDescription(`The new channel name is: ${ChannelName}`)
-                .setAuthor({ name: botUser?.username ?? 'Bot', iconURL: botUser?.displayAvatarURL({ forceStatic: false }) })
-            ]});
-        }
-    }
-
-    private async getChannelName(channelName: string): Promise<string> {
-
-        const response = await this.container.openai.responses.create({
-            prompt: {
-                "id": "pmpt_68b4aaab989c8194980e03e015bc31b70e52bc487cd0697a",
-                "version": "8"
-            },
-            input: channelName
-        });
-
-        return response.output_text
-    }
-
+		return response.output_text;
+	}
 }

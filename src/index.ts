@@ -28,7 +28,7 @@ const main = async () => {
 
 const openai = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY
-})
+});
 
 declare module '@sapphire/pieces' {
 	interface Container {
