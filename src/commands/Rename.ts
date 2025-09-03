@@ -2,6 +2,8 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
 import { EmbedBuilder, MessageFlags, GuildMember, PermissionFlagsBits } from 'discord.js';
 
+const admin = process.env.TEMP_ADMIN
+
 @ApplyOptions<Command.Options>({
 	description: 'Command to rename a user'
 })
@@ -21,7 +23,7 @@ export class RenameCommand extends Command {
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
 		const initialmember = interaction.member as GuildMember;
 
-		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator)) {
+		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && interaction.user.id !== admin) {
 			const embedfail = new EmbedBuilder()
 				.setColor('DarkRed')
 				.setTitle('Permission denied')

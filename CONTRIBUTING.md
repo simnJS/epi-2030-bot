@@ -29,6 +29,7 @@ Before you begin, ensure you have the following installed:
    ```env
    DISCORD_TOKEN="your_discord_token_here"
    OPENAI_API_KEY="your_openai_token_here"
+   TEMP_ADMIN=[your_ids]
    ```
 
 5. **Start the development server**:

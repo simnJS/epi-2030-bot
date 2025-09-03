@@ -38,6 +38,7 @@ You need a ```.env``` file like this:
 ```.dotenv
 DISCORD_TOKEN="your_discord_token_here"
 OPENAI_API_KEY="your_openai_token_here"
+TEMP_ADMIN=[your_ids]
 ```
 
 Then, execute this command:
