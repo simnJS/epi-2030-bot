@@ -78,7 +78,7 @@ export class IdeaButtonHandler extends InteractionHandler {
 		const newEmbed = EmbedBuilder.from(originalEmbed).setFields([
 			{ name: '👍 For', value: upvotes.toString(), inline: true },
 			{ name: '👎 Against', value: downvotes.toString(), inline: true },
-			originalEmbed.fields?.[2] || { name: '⏳ Time left', value: '0s', inline: true }
+			originalEmbed.fields?.[2] || { name: '⏳ Ends', value: 'Soon', inline: true }
 		]);
 
 		try {

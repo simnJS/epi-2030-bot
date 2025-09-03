@@ -59,11 +59,11 @@ export class IdeaCommand extends Command {
 			.setFooter({ text: `Suggested by ${interaction.user.tag}` })
 			.setTimestamp();
 
-		const createEmbed = () =>
+		const createEmbed = (currentUpvotes = 0, currentDownvotes = 0) =>
 			EmbedBuilder.from(baseEmbed).setFields([
-				{ name: '👍 For', value: '0', inline: true },
-				{ name: '👎 Against', value: '0', inline: true },
-				{ name: '⏳ Time left', value: formatDuration(Math.max(endTime - Date.now(), 0)), inline: true }
+				{ name: '👍 For', value: currentUpvotes.toString(), inline: true },
+				{ name: '👎 Against', value: currentDownvotes.toString(), inline: true },
+				{ name: '⏳ Ends', value: `<t:${Math.floor(endTime / 1000)}:R>`, inline: true }
 			]);
 
 		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍').setStyle(ButtonStyle.Success);
@@ -79,24 +79,12 @@ export class IdeaCommand extends Command {
 
 		const message = await interaction.fetchReply();
 
-		// Update of time left
-		const interval = setInterval(async () => {
-			const remaining = Math.max(endTime - Date.now(), 0);
-			try {
-				await message.edit({
-					embeds: [createEmbed()]
-				});
-			} catch {}
-			if (remaining <= 0) {
-				clearInterval(interval);
-			}
-		}, 1000);
 
 		// End vote after duration
 		setTimeout(async () => {
-			clearInterval(interval);
-
-			const currentEmbed = message.embeds[0];
+			// Re-fetch the message to get the latest embed values
+			const updatedMessage = await message.fetch();
+			const currentEmbed = updatedMessage.embeds[0];
 			const upvotes = parseInt(currentEmbed.fields?.[0]?.value || '0');
 			const downvotes = parseInt(currentEmbed.fields?.[1]?.value || '0');
 
@@ -105,7 +93,7 @@ export class IdeaCommand extends Command {
 				.setFields([
 					{ name: '👍 For', value: upvotes.toString(), inline: true },
 					{ name: '👎 Against', value: downvotes.toString(), inline: true },
-					{ name: '⏳ Vote ended', value: formatDuration(0), inline: true }
+					{ name: '⏳ Vote ended', value: 'Vote finished', inline: true }
 				])
 				.setFooter({ text: 'Vote ended' });
 
@@ -144,15 +132,4 @@ export class IdeaCommand extends Command {
 			activeIdeas.delete(userId);
 		}, voteDurationMs);
 	}
-}
-
-function formatDuration(ms: number): string {
-	const sec = Math.floor(ms / 1000) % 60;
-	const min = Math.floor(ms / (1000 * 60)) % 60;
-	const hr = Math.floor(ms / (1000 * 60 * 60));
-	let parts = [];
-	if (hr) parts.push(`${hr}h`);
-	if (min) parts.push(`${min}m`);
-	if (sec) parts.push(`${sec}s`);
-	return parts.join(' ') || '0s';
 }
