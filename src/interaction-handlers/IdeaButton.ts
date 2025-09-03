@@ -1,5 +1,5 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, ButtonBuilder, ButtonStyle, ActionRowBuilder, type ButtonInteraction } from 'discord.js';
+import { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, ButtonBuilder, ButtonStyle, ActionRowBuilder, type ButtonInteraction, MessageFlags } from 'discord.js';
 
 type VoteType = 'up' | 'down';
 
@@ -90,7 +90,7 @@ export class IdeaButtonHandler extends InteractionHandler {
 			? `Your vote "${voteLabel}" has been recorded!`
 			: 'You already voted. You can change your vote by clicking the other button';
 
-		await interaction.reply({ content, flags: 64 }); // 64 = ephemeral flag
+		await interaction.reply({ content, flags: MessageFlags.Ephemeral }); 
 	}
 
 	private async updateContainer(message: any, currentContent: any, upvotes: number, downvotes: number) {
