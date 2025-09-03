@@ -1,5 +1,5 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, ButtonBuilder, ButtonStyle, ActionRowBuilder, type ButtonInteraction, MessageFlags } from 'discord.js';
+import { ContainerBuilder, TextDisplayBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, type ButtonInteraction, MessageFlags } from 'discord.js';
 
 type VoteType = 'up' | 'down';
 
@@ -43,21 +43,18 @@ export class IdeaButtonHandler extends InteractionHandler {
 		return null;
 	}
 
-	private extractCurrentVotes(container: any): { upvotes: number; downvotes: number; idea: string; endTime: string; author: string } {
-		const textContent = container.components?.[0]?.content || '';
+	private extractCurrentVotes(container: any): { upvotes: number; downvotes: number; text: string; end: string} {
 		
-		const upvoteMatch = textContent.match(/👍 \*\*(\d+)\*\*/);
-		const downvoteMatch = textContent.match(/👎 \*\*(\d+)\*\*/);
-		const ideaMatch = textContent.match(/## 💡 (.*?)\n\n/s);
-		const endTimeMatch = textContent.match(/Ends (<t:\d+:R>)/);
-		const authorMatch = textContent.match(/by (.*?)$/m);
+		const text = container.components[0].data.content
+		const end = container.components[2].data.content
+		const upvotes = parseInt((container.components[1].components[0].label ?? '0').replace(/\D/g, ''), 10) || 0;
+		const downvotes = parseInt((container.components[1].components[1].label ?? '0').replace(/\D/g, ''), 10) || 0;
 
 		return {
-			upvotes: parseInt(upvoteMatch?.[1] || '0'),
-			downvotes: parseInt(downvoteMatch?.[1] || '0'),
-			idea: ideaMatch?.[1] || '',
-			endTime: endTimeMatch?.[1] || '',
-			author: authorMatch?.[1] || ''
+			upvotes: upvotes,
+			downvotes: downvotes,
+			end: end,
+			text: text
 		};
 	}
 
@@ -85,34 +82,46 @@ export class IdeaButtonHandler extends InteractionHandler {
 	}
 
 	private async replyToUser(interaction: ButtonInteraction, voteType: VoteType, changed: boolean) {
-		const voteLabel = voteType === 'up' ? '👍 For' : '👎 Against';
+		
+		const voteLabel = voteType === 'up' ? '👍 • For' : '👎 • Against';
 		const content = changed
 			? `Your vote "${voteLabel}" has been recorded!`
-			: 'You already voted. You can change your vote by clicking the other button';
+			: 'You already voted this. You can change your vote by clicking the other button';
 
-		await interaction.reply({ content, flags: MessageFlags.Ephemeral }); 
+		const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### ${content}`)
+				)
+			]
+
+		await interaction.reply({
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+		});
 	}
 
 	private async updateContainer(message: any, currentContent: any, upvotes: number, downvotes: number) {
-		const updatedContent = `## 💡 ${currentContent.idea}\n\n👍 **${upvotes}**  •  👎 **${downvotes}**\n\nEnds ${currentContent.endTime} • by ${currentContent.author}`;
-		
-		// Recréer les boutons au lieu de réutiliser les anciens
-		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍').setStyle(ButtonStyle.Success);
-		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel('👎').setStyle(ButtonStyle.Danger);
-		
+		// Create Button
+		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel(`👍 • ${upvotes}`).setStyle(ButtonStyle.Success);
+		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel(`👎 • ${downvotes}`).setStyle(ButtonStyle.Danger);
+
 		const newContainer = new ContainerBuilder()
-			.addTextDisplayComponents(
-				new TextDisplayBuilder().setContent(updatedContent)
-			)
-			.addSeparatorComponents(
-				new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
-			)
-			.addActionRowComponents(
-				new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton)
-			);
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(currentContent.text)
+				)
+				.addActionRowComponents(
+					new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton)
+				)
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(currentContent.end)
+				);
 
 		try {
-			await message.edit({ components: [newContainer] });
+			await message.edit({
+			components : [newContainer],
+			flags: MessageFlags.IsComponentsV2
+		});
 		} catch (error) {
 			console.error('Failed to update container:', error);
 		}
