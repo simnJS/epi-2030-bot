@@ -1,8 +1,8 @@
 // To implent : DB to save ideas or simply a json or discord channel to log them
 
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command } from '@sapphire/framework';
-import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, SlashCommandBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, SeparatorBuilder, SeparatorSpacingSize } from 'discord.js';
+import { Awaitable, Command } from '@sapphire/framework';
+import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, SeparatorBuilder, SeparatorSpacingSize } from 'discord.js';
 
 const activeIdeas = new Map<string, number>(); // userId -> endTime
 
@@ -12,13 +12,15 @@ const activeIdeas = new Map<string, number>(); // userId -> endTime
 	preconditions: ['IdeaChannelOnly']
 })
 export class IdeaCommand extends Command {
-	public override registerApplicationCommands(registry: Command.Registry) {
+	public override registerApplicationCommands(registry: Command.Registry): Awaitable<void> {
 		registry.registerChatInputCommand(
-			new SlashCommandBuilder()
-				.setName(this.name)
-				.setDescription(this.description)
-				.addStringOption((option) => option.setName('description').setDescription('Describe your idea').setRequired(true))
-				.addIntegerOption((option) => option.setName('duration').setDescription('Voting duration in minutes').setRequired(true))
+			(builder) =>
+				builder
+					.setName(this.name)
+					.setDescription(this.description)
+					.addStringOption((option) => option.setName('description').setDescription('Describe your idea').setRequired(true))
+					.addIntegerOption((option) => option.setName('duration').setDescription('Voting duration in minutes').setRequired(true)),
+			{ guildIds: ['1391769906944409662'] }
 		);
 	}
 
