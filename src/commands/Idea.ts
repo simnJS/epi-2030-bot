@@ -2,7 +2,7 @@
 
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
-import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, SeparatorBuilder, SeparatorSpacingSize } from 'discord.js';
+import { ChatInputCommandInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, ContainerComponent, ActionRow, ButtonComponent } from 'discord.js';
 
 const activeIdeas = new Map<string, number>(); // userId -> endTime
 
@@ -18,6 +18,7 @@ export class IdeaCommand extends Command {
 				builder
 					.setName(this.name)
 					.setDescription(this.description)
+					.addStringOption((option) => option.setName('title').setDescription('Title of your idea').setRequired(true))
 					.addStringOption((option) => option.setName('description').setDescription('Describe your idea').setRequired(true))
 					.addIntegerOption((option) => option.setName('duration').setDescription('Voting duration in minutes').setRequired(true)),
 			{ guildIds: ['1391769906944409662'] }
@@ -25,8 +26,10 @@ export class IdeaCommand extends Command {
 	}
 
 	public override async chatInputRun(interaction: ChatInputCommandInteraction) {
-		const idea = interaction.options.getString('description', true);
-		const duration = interaction.options.getInteger('duration') || 1440;
+		const idea = interaction.options.getString('title');
+		const description = interaction.options.getString('description', true);
+		let duration = interaction.options.getInteger('duration') || 1;
+		duration = duration / 30
 
 		if (duration <= 0) {
 			await interaction.reply({
@@ -34,6 +37,14 @@ export class IdeaCommand extends Command {
 				ephemeral: true
 			});
 			return;
+		}
+
+		if (duration >= 10080) {
+			await interaction.reply({
+				content: 'Duration cant be more than a week',
+				ephemeral: true
+			});
+			return; 
 		}
 
 		const voteDurationMs = duration * 60 * 1000;
@@ -54,32 +65,24 @@ export class IdeaCommand extends Command {
 		// Save the idea as active
 		activeIdeas.set(userId, now + voteDurationMs);
 
-		const baseEmbed = new EmbedBuilder()
-			.setTitle('💡 Idea suggestion for the Discord bot')
-			.setDescription(idea)
-			.setColor(0x5865f2)
-			.setFooter({ text: `Suggested by ${interaction.user.tag}` })
-			.setTimestamp();
-
-		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍').setStyle(ButtonStyle.Success);
-
-		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel('👎').setStyle(ButtonStyle.Danger);
+		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍 • 0').setStyle(ButtonStyle.Success);
+		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel('👎 • 0').setStyle(ButtonStyle.Danger);
 
 		const components = [
 			new ContainerBuilder()
 				.addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n👍 **${0}**  •  👎 **${0}**\n\nEnds <t:${Math.floor(endTime / 1000)}:R> • by ${interaction.user.tag}`),
-				)
-				.addSeparatorComponents(
-					new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${interaction.user.username}*`)
 				)
 				.addActionRowComponents(
 					new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton)
 				)
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`-# *Ends <t:${Math.floor(endTime / 1000)}:R>*`)
+				)
 		];
 
 		await interaction.reply({
-			components,
+			components : components,
 			flags: MessageFlags.IsComponentsV2
 		});
 
@@ -88,54 +91,46 @@ export class IdeaCommand extends Command {
 
 		// End vote after duration
 		setTimeout(async () => {
-			// Re-fetch the message to get the latest embed values
-			const updatedMessage = await message.fetch();
-			const currentEmbed = updatedMessage.embeds[0];
-			const upvotes = parseInt(currentEmbed.fields?.[0]?.value || '0');
-			const downvotes = parseInt(currentEmbed.fields?.[1]?.value || '0');
+            // Re-fetch the message to get the latest component values
+            const updatedMessage = await message.fetch();
 
-			const finalEmbed = EmbedBuilder.from(baseEmbed)
-				.setTitle('💡 Idea proposal for the Discord bot')
-				.setFields([
-					{ name: '👍 For', value: upvotes.toString(), inline: true },
-					{ name: '👎 Against', value: downvotes.toString(), inline: true },
-					{ name: '⏳ Vote ended', value: 'Vote finished', inline: true }
-				])
-				.setFooter({ text: 'Vote ended' });
+            const container = updatedMessage.components[0] as ContainerComponent;
+			const buttonscontainer = container.components[1] as ActionRow<ButtonComponent>;
 
-			try {
-				await message.edit({
-					components: [],
-					embeds: [finalEmbed]
-				});
-			} catch {}
+            const upvotes = parseInt((buttonscontainer.components[0].label ?? '0').replace(/\D/g, ''), 10) || 0;
+			const downvotes = parseInt((buttonscontainer.components[1].label ?? '0').replace(/\D/g, ''), 10) || 0;
 
-			try {
-				await message.delete(); // Delete the message to avoid confusion
-			} catch {}
+			console.log(upvotes, downvotes)
 
-			const resultMsg =
-				upvotes > downvotes
-					? '`Members of the promo said yes, you can add the feature(s) to the bot !`'
-					: "`Members of the promo said no, your idea won't be added to the bot`";
+            const upvoteButtonFinal = new ButtonBuilder().setCustomId('idea_upvote').setLabel(`👍 • ${upvotes}`).setStyle(ButtonStyle.Secondary).setDisabled(true);
+            const downvoteButtonFinal = new ButtonBuilder().setCustomId('idea_downvote').setLabel(`👎 • ${downvotes}`).setStyle(ButtonStyle.Secondary).setDisabled(true);
 
-			const resultEmbed = new EmbedBuilder()
-				.setTitle('📊 Result of vote')
-				.setDescription(`The vote for the idea: "**${idea}**" has finished!`)
-				.addFields(
-					{ name: '👍 For', value: upvotes.toString(), inline: true },
-					{ name: '👎 Against', value: downvotes.toString(), inline: true },
-					{ name: 'Decision', value: resultMsg }
-				)
-				.setColor(upvotes > downvotes ? 0x43b581 : 0xf04747)
-				.setTimestamp();
+            const resultMsg =
+                upvotes <= downvotes
+                    ? "Members of the promo said no, your idea won't be added to the bot"
+                    : 'Members of the promo said yes, you can add the feature to the bot !';
 
-			await interaction.followUp({
-				embeds: [resultEmbed],
-				ephemeral: false
-			});
+            const finalComponents = [
+                new ContainerBuilder()
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${interaction.user.username}*`)
+                    )
+                    .addActionRowComponents(
+                        new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButtonFinal, downvoteButtonFinal)
+                    )
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(`### ${resultMsg}\n-# *Vote ended <t:${Math.floor(endTime / 1000)}:R>*`)
+                    )
+                ];
 
-			activeIdeas.delete(userId);
-		}, voteDurationMs);
+            try {
+                await message.edit({
+                    components: finalComponents,
+                    flags: MessageFlags.IsComponentsV2
+                });
+            } catch {}
+
+            activeIdeas.delete(userId);
+        }, voteDurationMs);
 	}
 }
