@@ -82,12 +82,23 @@ export class IdeaButtonHandler extends InteractionHandler {
 	}
 
 	private async replyToUser(interaction: ButtonInteraction, voteType: VoteType, changed: boolean) {
-		const voteLabel = voteType === 'up' ? '👍 For' : '👎 Against';
+		
+		const voteLabel = voteType === 'up' ? '👍 • For' : '👎 • Against';
 		const content = changed
 			? `Your vote "${voteLabel}" has been recorded!`
-			: 'You already voted. You can change your vote by clicking the other button';
+			: 'You already voted this. You can change your vote by clicking the other button';
 
-		await interaction.reply({ content, flags: MessageFlags.Ephemeral }); 
+		const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### ${content}`)
+				)
+			]
+
+		await interaction.reply({
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+		});
 	}
 
 	private async updateContainer(message: any, currentContent: any, upvotes: number, downvotes: number) {
@@ -105,8 +116,6 @@ export class IdeaButtonHandler extends InteractionHandler {
 				.addTextDisplayComponents(
 					new TextDisplayBuilder().setContent(currentContent.end)
 				);
-
-
 
 		try {
 			await message.edit({

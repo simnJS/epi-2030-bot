@@ -20,7 +20,7 @@ export class IdeaCommand extends Command {
 					.setDescription(this.description)
 					.addStringOption((option) => option.setName('title').setDescription('Title of your idea').setRequired(true))
 					.addStringOption((option) => option.setName('description').setDescription('Describe your idea').setRequired(true))
-					.addIntegerOption((option) => option.setName('duration').setDescription('Voting duration in minutes').setRequired(true)),
+					.addIntegerOption((option) => option.setName('duration').setDescription('Voting duration in minutes').setRequired(true).setMinValue(1).setMaxValue(10080)),
 			{ guildIds: ['1391769906944409662'] }
 		);
 	}
@@ -28,23 +28,34 @@ export class IdeaCommand extends Command {
 	public override async chatInputRun(interaction: ChatInputCommandInteraction) {
 		const idea = interaction.options.getString('title');
 		const description = interaction.options.getString('description', true);
-		let duration = interaction.options.getInteger('duration') || 1;
-		duration = duration / 30
+		const duration = interaction.options.getInteger('duration') || 1;
 
 		if (duration <= 0) {
+			const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### Duration must be a positive integer`)
+				)
+			]
 			await interaction.reply({
-				content: 'Duration must be a positive integer',
-				ephemeral: true
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
 			});
 			return;
 		}
 
 		if (duration >= 10080) {
+			const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### Duration cant be more than a week`)
+				)
+			]
 			await interaction.reply({
-				content: 'Duration cant be more than a week',
-				ephemeral: true
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
 			});
-			return; 
+			return;
 		}
 
 		const voteDurationMs = duration * 60 * 1000;
@@ -55,9 +66,16 @@ export class IdeaCommand extends Command {
 
 		// Verify if user already has an active idea
 		if (activeIdeas.has(userId) && activeIdeas.get(userId)! > now) {
+
+			const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### You already have an active idea being voted on. Please wait until the current vote ends before submitting a new idea`)
+				)
+			]
 			await interaction.reply({
-				content: 'You already have an active idea being voted on. Please wait until the current vote ends before submitting a new idea',
-				ephemeral: true
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
 			});
 			return;
 		}
