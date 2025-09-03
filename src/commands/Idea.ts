@@ -2,7 +2,7 @@
 
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, SlashCommandBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, SeparatorBuilder, SeparatorSpacingSize } from 'discord.js';
 
 const activeIdeas = new Map<string, number>(); // userId -> endTime
 
@@ -59,22 +59,26 @@ export class IdeaCommand extends Command {
 			.setFooter({ text: `Suggested by ${interaction.user.tag}` })
 			.setTimestamp();
 
-		const createEmbed = (currentUpvotes = 0, currentDownvotes = 0) =>
-			EmbedBuilder.from(baseEmbed).setFields([
-				{ name: '👍 For', value: currentUpvotes.toString(), inline: true },
-				{ name: '👎 Against', value: currentDownvotes.toString(), inline: true },
-				{ name: '⏳ Ends', value: `<t:${Math.floor(endTime / 1000)}:R>`, inline: true }
-			]);
-
 		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍').setStyle(ButtonStyle.Success);
 
 		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel('👎').setStyle(ButtonStyle.Danger);
 
-		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton);
+		const components = [
+			new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n👍 **${0}**  •  👎 **${0}**\n\nEnds <t:${Math.floor(endTime / 1000)}:R> • by ${interaction.user.tag}`),
+				)
+				.addSeparatorComponents(
+					new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+				)
+				.addActionRowComponents(
+					new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton)
+				)
+		];
 
 		await interaction.reply({
-			embeds: [createEmbed()],
-			components: [row]
+			components,
+			flags: MessageFlags.IsComponentsV2
 		});
 
 		const message = await interaction.fetchReply();

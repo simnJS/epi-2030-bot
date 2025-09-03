@@ -1,5 +1,5 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { EmbedBuilder, type ButtonInteraction } from 'discord.js';
+import { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, ButtonBuilder, ButtonStyle, ActionRowBuilder, type ButtonInteraction } from 'discord.js';
 
 type VoteType = 'up' | 'down';
 
@@ -20,19 +20,20 @@ export class IdeaButtonHandler extends InteractionHandler {
 
 	public async run(interaction: ButtonInteraction) {
 		const { message, user, customId } = interaction;
-		const embed = message.embeds[0];
+		const container = message.components[0];
 
-		if (!embed) return;
+		if (!container) return;
 
 		const voteType = this.getVoteType(customId);
 		if (!voteType) return;
 
-		const { upvotes, downvotes, changed } = this.processVote(message.id, user.id, voteType, embed);
+		const currentContent = this.extractCurrentVotes(container);
+		const { upvotes, downvotes, changed } = this.processVoteFromContainer(message.id, user.id, voteType, currentContent);
 
 		await this.replyToUser(interaction, voteType, changed);
 
 		if (changed) {
-			await this.updateEmbed(message, embed, upvotes, downvotes);
+			await this.updateContainer(message, currentContent, upvotes, downvotes);
 		}
 	}
 
@@ -42,12 +43,30 @@ export class IdeaButtonHandler extends InteractionHandler {
 		return null;
 	}
 
-	private processVote(messageId: string, userId: string, voteType: VoteType, embed: any) {
+	private extractCurrentVotes(container: any): { upvotes: number; downvotes: number; idea: string; endTime: string; author: string } {
+		const textContent = container.components?.[0]?.content || '';
+		
+		const upvoteMatch = textContent.match(/👍 \*\*(\d+)\*\*/);
+		const downvoteMatch = textContent.match(/👎 \*\*(\d+)\*\*/);
+		const ideaMatch = textContent.match(/## 💡 (.*?)\n\n/s);
+		const endTimeMatch = textContent.match(/Ends (<t:\d+:R>)/);
+		const authorMatch = textContent.match(/by (.*?)$/m);
+
+		return {
+			upvotes: parseInt(upvoteMatch?.[1] || '0'),
+			downvotes: parseInt(downvoteMatch?.[1] || '0'),
+			idea: ideaMatch?.[1] || '',
+			endTime: endTimeMatch?.[1] || '',
+			author: authorMatch?.[1] || ''
+		};
+	}
+
+	private processVoteFromContainer(messageId: string, userId: string, voteType: VoteType, currentContent: any) {
 		const votes = this.voteData.get(messageId) || new Map<string, VoteType>();
 		const prevVote = votes.get(userId);
 
-		let upvotes = parseInt(embed.fields?.[0]?.value || '0');
-		let downvotes = parseInt(embed.fields?.[1]?.value || '0');
+		let upvotes = currentContent.upvotes;
+		let downvotes = currentContent.downvotes;
 		let changed = false;
 
 		if (prevVote !== voteType) {
@@ -71,18 +90,31 @@ export class IdeaButtonHandler extends InteractionHandler {
 			? `Your vote "${voteLabel}" has been recorded!`
 			: 'You already voted. You can change your vote by clicking the other button';
 
-		await interaction.reply({ content, ephemeral: true });
+		await interaction.reply({ content, flags: 64 }); // 64 = ephemeral flag
 	}
 
-	private async updateEmbed(message: any, originalEmbed: any, upvotes: number, downvotes: number) {
-		const newEmbed = EmbedBuilder.from(originalEmbed).setFields([
-			{ name: '👍 For', value: upvotes.toString(), inline: true },
-			{ name: '👎 Against', value: downvotes.toString(), inline: true },
-			originalEmbed.fields?.[2] || { name: '⏳ Ends', value: 'Soon', inline: true }
-		]);
+	private async updateContainer(message: any, currentContent: any, upvotes: number, downvotes: number) {
+		const updatedContent = `## 💡 ${currentContent.idea}\n\n👍 **${upvotes}**  •  👎 **${downvotes}**\n\nEnds ${currentContent.endTime} • by ${currentContent.author}`;
+		
+		// Recréer les boutons au lieu de réutiliser les anciens
+		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍').setStyle(ButtonStyle.Success);
+		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel('👎').setStyle(ButtonStyle.Danger);
+		
+		const newContainer = new ContainerBuilder()
+			.addTextDisplayComponents(
+				new TextDisplayBuilder().setContent(updatedContent)
+			)
+			.addSeparatorComponents(
+				new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+			)
+			.addActionRowComponents(
+				new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton)
+			);
 
 		try {
-			await message.edit({ embeds: [newEmbed] });
-		} catch {}
+			await message.edit({ components: [newContainer] });
+		} catch (error) {
+			console.error('Failed to update container:', error);
+		}
 	}
 }
