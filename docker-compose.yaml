@@ -1,11 +1,9 @@
 services:
   discord-bot:
-    build: .
+    image: ${DOCKER_USERNAME}/epi-2030-bot:latest
     container_name: sapphire-bot
     restart: unless-stopped
-    environment:
-      - DISCORD_TOKEN=${DISCORD_TOKEN}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file: /opt/epi-bot/.env   
     networks:
       - bot-network
 
