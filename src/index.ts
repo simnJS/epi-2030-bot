@@ -11,7 +11,14 @@ const client = new SapphireClient({
 		level: LogLevel.Debug
 	},
 	intents: [GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessages, GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
-	loadMessageCommandListeners: true
+	loadMessageCommandListeners: true,
+	presence: {
+		activities: [{
+			name: 'you',
+			type: 3 
+		}],
+		status: 'online'
+	}
 });
 
 const main = async () => {
