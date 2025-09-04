@@ -102,7 +102,6 @@ export class IdeaButtonHandler extends InteractionHandler {
 	}
 
 	private async updateContainer(message: any, currentContent: any, upvotes: number, downvotes: number) {
-		// Create Button
 		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel(`👍 • ${upvotes}`).setStyle(ButtonStyle.Success);
 		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel(`👎 • ${downvotes}`).setStyle(ButtonStyle.Danger);
 
