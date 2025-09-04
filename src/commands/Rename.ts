@@ -1,8 +1,8 @@
+import config from "../config";
+
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
 import { MessageFlags, GuildMember, PermissionFlagsBits, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
-
-const admin = process.env.TEMP_ADMIN
 
 @ApplyOptions<Command.Options>({
 	name: 'rename',
@@ -24,8 +24,7 @@ export class RenameCommand extends Command {
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
 		const initialmember = interaction.member as GuildMember;
 		const initialusername = initialmember.nickname
-
-		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && interaction.user.id !== admin) {
+		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
 			const component = [
 				new ContainerBuilder()
 				.addTextDisplayComponents(
