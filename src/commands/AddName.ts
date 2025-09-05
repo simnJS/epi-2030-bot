@@ -1,6 +1,8 @@
+import config from "../config";
+
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
-import { EmbedBuilder, MessageFlags, GuildMember, PermissionFlagsBits } from 'discord.js';
+import { MessageFlags, GuildMember, PermissionFlagsBits, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Command to add name to pseudo'
@@ -20,13 +22,20 @@ export class AddNameCommand extends Command {
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
 		const initialmember = interaction.member as GuildMember;
+		const initialusername = initialmember.nickname
 
-		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator)) {
-			const embedfail = new EmbedBuilder()
-				.setColor('DarkRed')
-				.setTitle('Permission denied')
-				.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false }) });
-			return interaction.reply({ embeds: [embedfail], flags: MessageFlags.Ephemeral });
+		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
+			const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### Permission denied`)
+				)
+			]
+			await interaction.reply({
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+			});
+			return;
 		}
 
 		const targetUser = interaction.options.getUser('target', true);
@@ -34,27 +43,43 @@ export class AddNameCommand extends Command {
 
 		const member = await interaction.guild?.members.fetch(targetUser.id);
 		if (!member) {
-			const embedfail = new EmbedBuilder()
-				.setColor('DarkRed')
-				.setTitle('User not found in this guild')
-				.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false }) });
-			return interaction.reply({ embeds: [embedfail], flags: MessageFlags.Ephemeral });
+			const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### User not found in this guild`)
+				)
+			]
+			await interaction.reply({
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+			});
+			return;
 		}
+		try {
+            await member.setNickname(`${initialmember.nickname} (${name})`);
+        } catch {
+            const component = [
+                new ContainerBuilder()
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(`### Failed to rename\n*Maybe the bot does not have permission to change this user's nickname*`)
+                )
+            ]
+            await interaction.reply({
+                components : component,
+                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+            });
+            return;
+        }
 
-		await member.setNickname(`${targetUser.globalName} (${name})`).catch(() => {
-			const embedfail = new EmbedBuilder()
-				.setColor('DarkRed')
-				.setTitle('Failed to add name')
-				.setDescription("Maybe the bot does not have permission to change this user's nickname")
-				.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false }) });
-			interaction.reply({ embeds: [embedfail], flags: MessageFlags.Ephemeral });
-		});
-
-		const embed = new EmbedBuilder()
-			.setColor('Green')
-			.setTitle('User renamed')
-			.setDescription(`Successfully add name ${name} to ${targetUser.tag}`)
-			.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false }) });
-		return interaction.reply({ embeds: [embed] });
+		const component = [
+            new ContainerBuilder()
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(`### User renamed\nSuccessfully add name ${name} to ${initialusername}`)
+                )
+        ]
+        await interaction.reply({
+                components : component,
+                flags: [MessageFlags.IsComponentsV2]
+        });
 	}
 }

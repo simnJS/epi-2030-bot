@@ -1,8 +1,9 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
-import { GuildChannel, EmbedBuilder } from 'discord.js';
+import { GuildChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
+	name: 'format-channel',
 	description: 'A command to format the name of the channel/category using openAI'
 })
 export class FormatChannelCommand extends Command {
@@ -10,7 +11,7 @@ export class FormatChannelCommand extends Command {
 		registry.registerChatInputCommand(
 			(builder) =>
 				builder
-					.setName('format-channel')
+					.setName(this.name)
 					.setDescription(this.description)
 					.addChannelOption((option) => option.setName('channel').setDescription('The channel to format').setRequired(false)),
 			{ guildIds: ['1391769906944409662'] }
@@ -21,11 +22,17 @@ export class FormatChannelCommand extends Command {
 		const channel = (interaction.options.getChannel('channel') as GuildChannel) ?? (interaction.channel as GuildChannel);
 
 		if (!channel) {
-			const embedfail = new EmbedBuilder()
-				.setColor('DarkRed')
-				.setTitle('Channel not found or cant be rename')
-				.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false }) });
-			return interaction.reply({ embeds: [embedfail] });
+			const component = [
+				new ContainerBuilder()
+				.addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(`### Channel not found or cant be rename`)
+				)
+			]
+			await interaction.reply({
+				components : component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+			});
+			return;
 		}
 
 		let newChannelName = channel.name;
@@ -41,12 +48,16 @@ export class FormatChannelCommand extends Command {
 
 		await channel.setName(newChannelName).catch();
 
-		const embed = new EmbedBuilder()
-			.setColor('Green')
-			.setTitle('Channel name update')
-			.setDescription('The new channel name is: ' + channel.name)
-			.setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ forceStatic: false }) });
-		return interaction.reply({ embeds: [embed] });
+		const component = [
+            new ContainerBuilder()
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(`### Channel name update\nThe new channel name is: ${channel.name}`)
+                )
+        ]
+        return interaction.reply({
+                components : component,
+                flags: [MessageFlags.IsComponentsV2]
+        });
 	}
 
 	private async getChannelTextName(channelName: string): Promise<string> {
