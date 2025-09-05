@@ -23,13 +23,10 @@ export class FormatChannelCommand extends Command {
 
 		if (!channel) {
 			const component = [
-				new ContainerBuilder()
-				.addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`### Channel not found or cant be rename`)
-				)
-			]
+				new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Channel not found or cant be rename`))
+			];
 			await interaction.reply({
-				components : component,
+				components: component,
 				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
 			});
 			return;
@@ -49,15 +46,14 @@ export class FormatChannelCommand extends Command {
 		await channel.setName(newChannelName).catch();
 
 		const component = [
-            new ContainerBuilder()
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(`### Channel name update\nThe new channel name is: ${channel.name}`)
-                )
-        ]
-        return interaction.reply({
-                components : component,
-                flags: [MessageFlags.IsComponentsV2]
-        });
+			new ContainerBuilder().addTextDisplayComponents(
+				new TextDisplayBuilder().setContent(`### Channel name update\nThe new channel name is: ${channel.name}`)
+			)
+		];
+		return interaction.reply({
+			components: component,
+			flags: [MessageFlags.IsComponentsV2]
+		});
 	}
 
 	private async getChannelTextName(channelName: string): Promise<string> {

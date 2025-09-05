@@ -6,7 +6,7 @@ import { ActivityType } from 'discord.js';
 export class DynamicStatusListener extends Listener {
 	private statusIndex = 0;
 	private statusInterval: NodeJS.Timeout | null = null;
-	
+
 	private readonly statuses = [
 		{ name: 'you', type: ActivityType.Watching },
 		{ name: 'coding hard', type: ActivityType.Playing }
@@ -19,7 +19,7 @@ export class DynamicStatusListener extends Listener {
 
 	private startStatusRotation() {
 		this.updateStatus();
-		
+
 		this.statusInterval = setInterval(() => {
 			this.updateStatus();
 		}, 30000);
@@ -27,17 +27,19 @@ export class DynamicStatusListener extends Listener {
 
 	private updateStatus() {
 		const status = this.statuses[this.statusIndex];
-		
+
 		this.container.client.user?.setPresence({
-			activities: [{
-				name: status.name,
-				type: status.type
-			}],
+			activities: [
+				{
+					name: status.name,
+					type: status.type
+				}
+			],
 			status: 'online'
 		});
 
 		this.container.logger.info(`Status updated to: ${status.name} (${status.type})`);
-		
+
 		this.statusIndex = (this.statusIndex + 1) % this.statuses.length;
 	}
 

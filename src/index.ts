@@ -13,10 +13,12 @@ const client = new SapphireClient({
 	intents: [GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessages, GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
 	loadMessageCommandListeners: true,
 	presence: {
-		activities: [{
-			name: 'you',
-			type: 3 
-		}],
+		activities: [
+			{
+				name: 'you',
+				type: 3
+			}
+		],
 		status: 'online'
 	}
 });

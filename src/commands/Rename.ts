@@ -1,4 +1,4 @@
-import config from "../config";
+import config from '../config';
 
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
@@ -23,16 +23,11 @@ export class RenameCommand extends Command {
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
 		const initialmember = interaction.member as GuildMember;
-		const initialusername = initialmember.nickname
+		const initialusername = initialmember.nickname;
 		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
-			const component = [
-				new ContainerBuilder()
-				.addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`### Permission denied`)
-				)
-			]
+			const component = [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Permission denied`))];
 			await interaction.reply({
-				components : component,
+				components: component,
 				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
 			});
 			return;
@@ -44,42 +39,39 @@ export class RenameCommand extends Command {
 		const member = await interaction.guild?.members.fetch(targetUser.id);
 		if (!member) {
 			const component = [
-				new ContainerBuilder()
-				.addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`### User not found in this guild`)
-				)
-			]
+				new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### User not found in this guild`))
+			];
 			await interaction.reply({
-				components : component,
+				components: component,
 				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
 			});
 			return;
 		}
 
 		try {
-            await member.setNickname(newName);
-        } catch {
-            const component = [
-                new ContainerBuilder()
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(`### Failed to rename\n*Maybe the bot does not have permission to change this user's nickname*`)
-                )
-            ]
-            await interaction.reply({
-                components : component,
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
-            });
-            return;
-        }
+			await member.setNickname(newName);
+		} catch {
+			const component = [
+				new ContainerBuilder().addTextDisplayComponents(
+					new TextDisplayBuilder().setContent(
+						`### Failed to rename\n*Maybe the bot does not have permission to change this user's nickname*`
+					)
+				)
+			];
+			await interaction.reply({
+				components: component,
+				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+			});
+			return;
+		}
 		const component = [
-            new ContainerBuilder()
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(`### User renamed\nSuccessfully renamed ${initialusername} to ${newName}`)
-                )
-        ]
-        await interaction.reply({
-                components : component,
-                flags: [MessageFlags.IsComponentsV2]
-        });
+			new ContainerBuilder().addTextDisplayComponents(
+				new TextDisplayBuilder().setContent(`### User renamed\nSuccessfully renamed ${initialusername} to ${newName}`)
+			)
+		];
+		await interaction.reply({
+			components: component,
+			flags: [MessageFlags.IsComponentsV2]
+		});
 	}
 }
