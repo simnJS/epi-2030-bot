@@ -23,6 +23,7 @@ export class AddNameCommand extends Command {
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
 		const initialmember = interaction.member as GuildMember;
 		const initialusername = initialmember.nickname;
+		// Test comment for PR workflow
 
 		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
 			const component = [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Permission denied`))];
