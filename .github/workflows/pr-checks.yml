@@ -45,16 +45,16 @@ jobs:
           const body = `## ❌ Code formatting required
           
 The following files need to be formatted:
-${files.map(f => `- \`${f}\``).join('\n')}
+${files.map(f => \`- \\\`${f}\\\`\`).join('\\n')}
 
-Please run \`npm run format\` to fix the formatting issues.
+Please run \\\`npm run format\\\` to fix the formatting issues.
 
 <details>
 <summary>📋 View formatting changes</summary>
 
-\`\`\`diff
+\\\`\\\`\\\`diff
 ${patch}
-\`\`\`
+\\\`\\\`\\\`
 </details>`;
           
           github.rest.issues.createComment({
