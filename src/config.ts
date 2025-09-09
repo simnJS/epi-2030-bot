@@ -6,7 +6,7 @@ interface Config {
 	admins: string[];
 }
 
-const configPath = resolve(__dirname, 'config.yaml');
+const configPath = resolve(__dirname, '../config.yaml');
 const configFile = readFileSync(configPath, 'utf8');
 const config: Config = yaml.parse(configFile);
 
