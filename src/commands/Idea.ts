@@ -12,7 +12,8 @@ import {
 	MessageFlags,
 	ContainerComponent,
 	ActionRow,
-	ButtonComponent
+	ButtonComponent,
+	GuildMember
 } from 'discord.js';
 
 const activeIdeas = new Map<string, number>(); // userId -> endTime
@@ -42,6 +43,7 @@ export class IdeaCommand extends Command {
 		const idea = interaction.options.getString('title');
 		const description = interaction.options.getString('description', true);
 		const duration = interaction.options.getInteger('duration') || 1;
+		const member = await interaction.guild?.members.fetch(interaction.user.id) as GuildMember;
 
 		if (duration <= 0) {
 			const component = [
@@ -96,7 +98,7 @@ export class IdeaCommand extends Command {
 		const components = [
 			new ContainerBuilder()
 				.addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${interaction.user.username}*`)
+					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${member.displayName}*`)
 				)
 				.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton))
 				.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# *Ends <t:${Math.floor(endTime / 1000)}:R>*`))
@@ -141,7 +143,7 @@ export class IdeaCommand extends Command {
 			const finalComponents = [
 				new ContainerBuilder()
 					.addTextDisplayComponents(
-						new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${interaction.user.username}*`)
+						new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${member.displayName}*`)
 					)
 					.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButtonFinal, downvoteButtonFinal))
 					.addTextDisplayComponents(
