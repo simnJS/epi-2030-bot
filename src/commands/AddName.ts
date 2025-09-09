@@ -22,7 +22,7 @@ export class AddNameCommand extends Command {
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
 		const initialmember = interaction.member as GuildMember;
-		const initialusername = initialmember.nickname;
+		const initialusername = initialmember.displayName;
 		// Test comment for PR workflow
 
 		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
@@ -49,7 +49,7 @@ export class AddNameCommand extends Command {
 			return;
 		}
 		try {
-			await member.setNickname(`${initialmember.nickname} (${name})`);
+			await member.setNickname(`${initialmember.displayName} (${name})`);
 		} catch {
 			const component = [
 				new ContainerBuilder().addTextDisplayComponents(
