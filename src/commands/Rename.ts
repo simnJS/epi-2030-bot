@@ -23,7 +23,6 @@ export class RenameCommand extends Command {
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
 		const initialmember = interaction.member as GuildMember;
-		const initialusername = initialmember.nickname;
 		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
 			const component = [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Permission denied`))];
 			await interaction.reply({
@@ -36,7 +35,9 @@ export class RenameCommand extends Command {
 		const targetUser = interaction.options.getUser('target', true);
 		const newName = interaction.options.getString('newname', true);
 
-		const member = await interaction.guild?.members.fetch(targetUser.id);
+		const member = await interaction.guild?.members.fetch(targetUser.id) as GuildMember;
+		const initialusername = member.displayName;
+		
 		if (!member) {
 			const component = [
 				new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### User not found in this guild`))
