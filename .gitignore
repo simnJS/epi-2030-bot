@@ -12,6 +12,7 @@ node_modules/
 .DS_Store
 
 dist/
+opt/
 
 # Ignore heapsnapshot and log files
 *.heapsnapshot
