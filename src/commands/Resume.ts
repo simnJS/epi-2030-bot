@@ -89,8 +89,8 @@ export class ResumeCommand extends Command {
 				return;
 			}
 
-			const completion = await this.container.openai.chat.completions.create({
-				model: 'gpt-5-nano',
+			const completion = await this.container.groq.chat.completions.create({
+				model: 'openai/gpt-oss-20b',
 				messages: [
 					{
 						role: 'system',
@@ -102,8 +102,7 @@ export class ResumeCommand extends Command {
 						content: `Crée un résumé de cette conversation Discord. Voici les messages avec format [nom d'utilisateur (userid)]: message :\n\n${messageText}`
 					}
 				],
-				max_completion_tokens: 50000,
-				verbosity: 'medium'
+				max_tokens: 50000
 			});
 
 			const summary = completion.choices[0]?.message?.content || 'Unable to generate summary';
@@ -127,7 +126,7 @@ export class ResumeCommand extends Command {
 				const errorComponent = [
 					new ContainerBuilder().addTextDisplayComponents(
 						new TextDisplayBuilder().setContent(
-							`### ❌ An error occurred while generating the summary\n*Please make sure OpenAI API key is configured*`
+							`### ❌ An error occurred while generating the summary\n*Please make sure Groq API key is configured*`
 						)
 					)
 				];
