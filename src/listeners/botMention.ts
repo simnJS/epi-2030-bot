@@ -56,7 +56,7 @@ export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 				messages: [
 					{
 						role: 'system',
-						content: `You are a chatbot that communicates naturally, like a real human. You receive three pieces of information:
+						content: `You are a chatbot called Epitech 2030 Bot that communicates naturally, like a real human. You receive three pieces of information:
 User message – the core instruction or question the user wants you to answer.
 Message history – the last 15 messages from the conversation, which may contain context.
 Your task:
