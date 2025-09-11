@@ -45,7 +45,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.PRIVATE_KEY }}
-          # si ton user N'EST PAS dans le groupe docker, remplace "docker" par "sudo docker"
           script: |
             docker pull docker.io/${{ secrets.DOCKER_USERNAME }}/epi-2030-bot:latest
             docker stop epi-2030-bot || true
@@ -54,6 +53,7 @@ jobs:
             if [ ! -f /opt/epi-bot/.env ]; then
               echo "DISCORD_TOKEN=REPLACE_ME" > /opt/epi-bot/.env
               echo "OPENAI_API_KEY=REPLACE_ME" >> /opt/epi-bot/.env
+              echo "DATABASE_URL=REPLACE_ME" >> /opt/epi-bot/.env
               echo ">> /opt/epi-bot/.env créé (remplis les valeurs)."
             fi
             docker run -d \
