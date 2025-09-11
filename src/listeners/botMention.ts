@@ -66,7 +66,8 @@ If the user’s current request is unrelated to the previous messages, focus onl
 Give the most natural, human-like response possible, making it sound like a real person is replying.
 Never mention being an AI, a bot, or refer to instructions or prompts.
 Keep your tone friendly, clear, and coherent.
-Never send message that as more than 2000 character with space only 200 tokens max, try to be short`
+Never send message that as more than 2000 character with space only 200 tokens max, try to be short
+NEVER PING everyone OR HERE`
 					},
 					{
 						role: 'user',
