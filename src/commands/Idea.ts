@@ -7,7 +7,8 @@ import {
 	ActionRowBuilder,
 	ContainerBuilder,
 	TextDisplayBuilder,
-	MessageFlags
+	MessageFlags,
+	GuildMember
 } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
@@ -36,6 +37,7 @@ export class IdeaCommand extends Command {
 			const idea = interaction.options.getString('title');
 			const description = interaction.options.getString('description', true);
 			const duration = interaction.options.getInteger('duration') || 1;
+			const member = await interaction.guild?.members.fetch(interaction.user.id) as GuildMember;
 
 		if (duration <= 0) {
 			const component = [
@@ -108,7 +110,7 @@ export class IdeaCommand extends Command {
 		const components = [
 			new ContainerBuilder()
 				.addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${interaction.user.username}*`)
+					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${member.displayName}*`)
 				)
 				.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton))
 				.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# *Ends <t:${Math.floor(endTime.getTime() / 1000)}:R>*`))
@@ -127,7 +129,7 @@ export class IdeaCommand extends Command {
 					title: idea!,
 					description: description,
 					authorId: userId,
-					authorName: interaction.user.username,
+					authorName: member.displayName,
 					messageId: message.id,
 					duration: duration,
 					endTime: endTime
