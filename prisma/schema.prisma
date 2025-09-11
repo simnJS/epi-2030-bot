@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Idea {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  authorId    String   // Discord user ID
+  authorName  String   // Discord username
+  messageId   String   @unique // Discord message ID
+  duration    Int      // Duration in minutes
+  endTime     DateTime
+  createdAt   DateTime @default(now())
+  isActive    Boolean  @default(true)
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  
+  votes       Vote[]
+  
+  @@map("ideas")
+}
+
+model Vote {
+  id      String   @id @default(cuid())
+  ideaId  String
+  userId  String   // Discord user ID  
+  type    VoteType // up or down
+  
+  idea    Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  
+  @@unique([ideaId, userId])
+  @@map("votes")
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
