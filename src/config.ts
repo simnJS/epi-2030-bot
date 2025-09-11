@@ -8,6 +8,7 @@ interface Config {
 
 const possiblePaths = [
 	resolve(__dirname, 'config.yaml'),           
+	resolve(process.cwd(), 'config.yaml'),
 	resolve(process.cwd(), 'src', 'config.yaml') 
 ];
 
