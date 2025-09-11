@@ -20,7 +20,7 @@ export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 
 		try {
 			const channel = message.channel as TextChannel;
-			const messages = await channel.messages.fetch({ limit: 6 });
+			const messages = await channel.messages.fetch({ limit: 15 });
 			const messageArray = Array.from(messages.values()).reverse().slice(0, -1); // Remove the mention message itself
 
 			const contextText = messageArray
@@ -33,8 +33,8 @@ export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 			console.log('Context text:', contextText);
 			console.log('User message:', userMessage);
 
-			const completion = await this.container.openai.chat.completions.create({
-				model: 'gpt-5-nano',
+			const completion = await this.container.groq.chat.completions.create({
+				model: 'openai/gpt-oss-20b',
 				messages: [
 					{
 						role: 'system',
@@ -54,11 +54,8 @@ Tes réponses doivent être courtes, percutantes et adaptées au contexte Discor
 						content: `Contexte des derniers messages du salon:\n${contextText}\n\nL'utilisateur me dit: "${userMessage}"`
 					}
 				],
-				max_completion_tokens: 50000,
-				verbosity: 'medium'
+				max_tokens: 50000
 			});
-
-			console.log('GPT-5 Response:', JSON.stringify(completion, null, 2));
 
 			const response = completion.choices[0]?.message?.content;
 

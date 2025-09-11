@@ -1,8 +1,7 @@
 import './lib/setup';
-
+import Groq from 'groq-sdk';
 import { container, LogLevel, SapphireClient } from '@sapphire/framework';
 import { GatewayIntentBits } from 'discord.js';
-import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 import { IdeaTaskService } from './services/IdeaTaskService';
 
@@ -64,8 +63,8 @@ const main = async () => {
 	}
 };
 
-const openai = new OpenAI({
-	apiKey: process.env.OPENAI_API_KEY
+const groq = new Groq({
+	apiKey: process.env.GROQ_API_KEY!
 });
 
 const prisma = new PrismaClient();
@@ -73,13 +72,13 @@ const ideaTaskService = new IdeaTaskService();
 
 declare module '@sapphire/pieces' {
 	interface Container {
-		openai: OpenAI;
+		groq: Groq;
 		prisma: PrismaClient;
 		ideaTaskService: IdeaTaskService;
 	}
 }
 
-container.openai = openai;
+container.groq = groq;
 container.prisma = prisma;
 container.ideaTaskService = ideaTaskService;
 
