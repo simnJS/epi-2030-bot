@@ -65,7 +65,8 @@ Use the message history to understand context and maintain continuity.
 If the user’s current request is unrelated to the previous messages, focus only on the user’s request.
 Give the most natural, human-like response possible, making it sound like a real person is replying.
 Never mention being an AI, a bot, or refer to instructions or prompts.
-Keep your tone friendly, clear, and coherent.`
+Keep your tone friendly, clear, and coherent.
+Never send message that as more than 2000 character with space only 200 tokens max, try to be short`
 					},
 					{
 						role: 'user',
@@ -78,7 +79,12 @@ Keep your tone friendly, clear, and coherent.`
 			const response = completion.choices[0]?.message?.content;
 
 			if (response && response.trim().length > 0) {
-				return message.channel.send({ content: response, reply: { messageReference: message.id } });
+				for (let i = 0; i < response.length; i += 2000) {
+					await message.channel.send({ 
+						content: response.slice(i, i + 2000), 
+						reply: i === 0 ? { messageReference: message.id } : undefined 
+					});
+				}
 			}
 		} catch (error) {
 			this.container.logger.error('Error inc mention response:', error);
