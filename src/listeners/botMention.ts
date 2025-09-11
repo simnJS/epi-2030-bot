@@ -7,8 +7,6 @@ import type { Message, TextChannel } from 'discord.js';
 })
 export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 	public override async run(message: Message) {
-		// Ignore bot messages
-		if (message.author.bot) return;
 
 		// Check if the bot is mentioned in the message
 		if (!message.mentions.has(this.container.client.user!)) return;
