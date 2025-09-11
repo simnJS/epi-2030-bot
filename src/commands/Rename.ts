@@ -1,12 +1,11 @@
-import config from '../config';
-
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
-import { MessageFlags, GuildMember, PermissionFlagsBits, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
+import { MessageFlags, GuildMember, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
 	name: 'rename',
-	description: 'Command to rename a user'
+	description: 'Command to rename a user',
+	preconditions: ['AdminOnly']
 })
 export class RenameCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry): Awaitable<void> {
@@ -22,16 +21,6 @@ export class RenameCommand extends Command {
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-		const initialmember = interaction.member as GuildMember;
-		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
-			const component = [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Permission denied`))];
-			await interaction.reply({
-				components: component,
-				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
-			});
-			return;
-		}
-
 		const targetUser = interaction.options.getUser('target', true);
 		const newName = interaction.options.getString('newname', true);
 
