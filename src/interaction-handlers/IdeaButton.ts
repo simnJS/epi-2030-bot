@@ -4,7 +4,6 @@ import { ContainerBuilder, TextDisplayBuilder, ButtonBuilder, ButtonStyle, Actio
 type VoteType = 'up' | 'down';
 
 export class IdeaButtonHandler extends InteractionHandler {
-
 	public constructor(ctx: InteractionHandler.LoaderContext, options: InteractionHandler.Options) {
 		super(ctx, {
 			...options,
@@ -98,7 +97,7 @@ export class IdeaButtonHandler extends InteractionHandler {
 
 	private async replyToUser(interaction: ButtonInteraction, voteType: VoteType, changed: boolean, errorMsg?: string) {
 		let content: string;
-		
+
 		if (errorMsg) {
 			content = errorMsg;
 		} else {
@@ -125,9 +124,7 @@ export class IdeaButtonHandler extends InteractionHandler {
 				new TextDisplayBuilder().setContent(`## 💡 ${idea.title}\n\n### ${idea.description}\n*Suggested by ${idea.authorName}*`)
 			)
 			.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton))
-			.addTextDisplayComponents(
-				new TextDisplayBuilder().setContent(`-# *Ends <t:${Math.floor(idea.endTime.getTime() / 1000)}:R>*`)
-			);
+			.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# *Ends <t:${Math.floor(idea.endTime.getTime() / 1000)}:R>*`));
 
 		try {
 			await message.edit({

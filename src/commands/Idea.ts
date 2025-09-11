@@ -37,51 +37,64 @@ export class IdeaCommand extends Command {
 			const idea = interaction.options.getString('title');
 			const description = interaction.options.getString('description', true);
 			const duration = interaction.options.getInteger('duration') || 1;
-			const member = await interaction.guild?.members.fetch(interaction.user.id) as GuildMember;
+			const member = (await interaction.guild?.members.fetch(interaction.user.id)) as GuildMember;
 
-		if (duration <= 0) {
-			const component = [
-				new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Duration must be a positive integer`))
-			];
-			await interaction.reply({
-				components: component,
-				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
-			});
-			return;
-		}
+			if (duration <= 0) {
+				const component = [
+					new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Duration must be a positive integer`))
+				];
+				await interaction.reply({
+					components: component,
+					flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+				});
+				return;
+			}
 
-		if (duration >= 10080) {
-			const component = [
-				new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Duration cant be more than a week`))
-			];
-			await interaction.reply({
-				components: component,
-				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
-			});
-			return;
-		}
+			if (duration >= 10080) {
+				const component = [
+					new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Duration cant be more than a week`))
+				];
+				await interaction.reply({
+					components: component,
+					flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+				});
+				return;
+			}
 
-		const userId = interaction.user.id;
-		const now = new Date();
-		const endTime = new Date(now.getTime() + duration * 60 * 1000);
+			const userId = interaction.user.id;
+			const now = new Date();
+			const endTime = new Date(now.getTime() + duration * 60 * 1000);
 
-		try {
-			const activeIdea = await this.container.prisma.idea.findFirst({
-				where: {
-					authorId: userId,
-					isActive: true,
-					endTime: {
-						gt: now
+			try {
+				const activeIdea = await this.container.prisma.idea.findFirst({
+					where: {
+						authorId: userId,
+						isActive: true,
+						endTime: {
+							gt: now
+						}
 					}
-				}
-			});
+				});
 
-			if (activeIdea) {
+				if (activeIdea) {
+					const component = [
+						new ContainerBuilder().addTextDisplayComponents(
+							new TextDisplayBuilder().setContent(
+								`### You already have an active idea being voted on. Please wait until the current vote ends before submitting a new idea`
+							)
+						)
+					];
+					await interaction.reply({
+						components: component,
+						flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+					});
+					return;
+				}
+			} catch (error) {
+				this.container.logger.error('Database error checking active ideas:', error);
 				const component = [
 					new ContainerBuilder().addTextDisplayComponents(
-						new TextDisplayBuilder().setContent(
-							`### You already have an active idea being voted on. Please wait until the current vote ends before submitting a new idea`
-						)
+						new TextDisplayBuilder().setContent(`### Database error. Please try again later.`)
 					)
 				];
 				await interaction.reply({
@@ -90,58 +103,44 @@ export class IdeaCommand extends Command {
 				});
 				return;
 			}
-		} catch (error) {
-			this.container.logger.error('Database error checking active ideas:', error);
-			const component = [
-				new ContainerBuilder().addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`### Database error. Please try again later.`)
-				)
+
+			const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍 • 0').setStyle(ButtonStyle.Success);
+			const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel('👎 • 0').setStyle(ButtonStyle.Danger);
+
+			const components = [
+				new ContainerBuilder()
+					.addTextDisplayComponents(
+						new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${member.displayName}*`)
+					)
+					.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton))
+					.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# *Ends <t:${Math.floor(endTime.getTime() / 1000)}:R>*`))
 			];
+
 			await interaction.reply({
-				components: component,
-				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+				components: components,
+				flags: MessageFlags.IsComponentsV2
 			});
-			return;
-		}
 
-		const upvoteButton = new ButtonBuilder().setCustomId('idea_upvote').setLabel('👍 • 0').setStyle(ButtonStyle.Success);
-		const downvoteButton = new ButtonBuilder().setCustomId('idea_downvote').setLabel('👎 • 0').setStyle(ButtonStyle.Danger);
+			const message = await interaction.fetchReply();
 
-		const components = [
-			new ContainerBuilder()
-				.addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`## 💡 ${idea}\n\n### ${description}\n*Suggested by ${member.displayName}*`)
-				)
-				.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(upvoteButton, downvoteButton))
-				.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# *Ends <t:${Math.floor(endTime.getTime() / 1000)}:R>*`))
-		];
-
-		await interaction.reply({
-			components: components,
-			flags: MessageFlags.IsComponentsV2
-		});
-
-		const message = await interaction.fetchReply();
-
-		try {
-			await this.container.prisma.idea.create({
-				data: {
-					title: idea!,
-					description: description,
-					authorId: userId,
-					authorName: member.displayName,
-					messageId: message.id,
-					duration: duration,
-					endTime: endTime
-				}
-			});
-		} catch (error) {
-			this.container.logger.error('Failed to save idea to database:', error);
-		}
-
+			try {
+				await this.container.prisma.idea.create({
+					data: {
+						title: idea!,
+						description: description,
+						authorId: userId,
+						authorName: member.displayName,
+						messageId: message.id,
+						duration: duration,
+						endTime: endTime
+					}
+				});
+			} catch (error) {
+				this.container.logger.error('Failed to save idea to database:', error);
+			}
 		} catch (error) {
 			this.container.logger.error('Error in idea command:', error);
-			
+
 			if (!interaction.replied && !interaction.deferred) {
 				try {
 					const component = [

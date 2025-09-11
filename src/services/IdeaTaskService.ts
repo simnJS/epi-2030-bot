@@ -1,13 +1,5 @@
 import { container } from '@sapphire/framework';
-import {
-	ButtonBuilder,
-	ButtonStyle,
-	ActionRowBuilder,
-	ContainerBuilder,
-	TextDisplayBuilder,
-	MessageFlags,
-	type Message
-} from 'discord.js';
+import { ButtonBuilder, ButtonStyle, ActionRowBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, type Message } from 'discord.js';
 
 export class IdeaTaskService {
 	private intervalId: NodeJS.Timeout | null = null;
@@ -18,7 +10,7 @@ export class IdeaTaskService {
 		} catch (error) {
 			container.logger.error('Failed initial expired ideas check:', error);
 		}
-		
+
 		this.intervalId = setInterval(async () => {
 			await this.checkExpiredIdeas();
 		}, 60 * 1000);
@@ -37,7 +29,7 @@ export class IdeaTaskService {
 	private async checkExpiredIdeas() {
 		try {
 			const now = new Date();
-			
+
 			const expiredIdeas = await container.prisma.idea.findMany({
 				where: {
 					isActive: true,
@@ -49,7 +41,7 @@ export class IdeaTaskService {
 					votes: true
 				}
 			});
-			
+
 			for (const idea of expiredIdeas) {
 				await this.finalizeIdea(idea);
 			}
@@ -73,25 +65,24 @@ export class IdeaTaskService {
 			});
 
 			const client = container.client;
-			
+
 			let message: Message | undefined;
 			let channel: any;
-			
+
 			try {
 				const guild = await client.guilds.fetch('1391769906944409662');
 				const channels = await guild.channels.fetch();
-				
+
 				for (const [, ch] of channels) {
 					if (ch?.isTextBased()) {
 						try {
 							message = await ch.messages.fetch(idea.messageId);
 							channel = ch;
 							break;
-						} catch {
-						}
+						} catch {}
 					}
 				}
-				
+
 				if (!message || !channel) {
 					container.logger.warn(`Could not find message ${idea.messageId} for idea ${idea.id}`);
 					return;

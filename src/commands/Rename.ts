@@ -35,9 +35,9 @@ export class RenameCommand extends Command {
 		const targetUser = interaction.options.getUser('target', true);
 		const newName = interaction.options.getString('newname', true);
 
-		const member = await interaction.guild?.members.fetch(targetUser.id) as GuildMember;
+		const member = (await interaction.guild?.members.fetch(targetUser.id)) as GuildMember;
 		const initialusername = member.displayName;
-		
+
 		if (!member) {
 			const component = [
 				new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### User not found in this guild`))

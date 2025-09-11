@@ -6,11 +6,7 @@ interface Config {
 	admins: string[];
 }
 
-const possiblePaths = [
-	resolve(__dirname, 'config.yaml'),           
-	resolve(process.cwd(), 'config.yaml'),
-	resolve(process.cwd(), 'src', 'config.yaml') 
-];
+const possiblePaths = [resolve(__dirname, 'config.yaml'), resolve(process.cwd(), 'config.yaml'), resolve(process.cwd(), 'src', 'config.yaml')];
 
 let configPath: string | null = null;
 for (const path of possiblePaths) {

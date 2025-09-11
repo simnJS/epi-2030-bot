@@ -38,26 +38,25 @@ const main = async () => {
 		client.logger.info('Logging in');
 		await client.login();
 		client.logger.info('logged in');
-		
+
 		try {
 			await ideaTaskService.start();
 		} catch (error) {
 			client.logger.error('Failed to start IdeaTaskService:', error);
 		}
-		
+
 		const shutdown = async (signal: string) => {
 			client.logger.info(`${signal} received, shutting down gracefully...`);
-			
+
 			ideaTaskService.stop();
 			await prisma.$disconnect();
 			await client.destroy();
-			
+
 			process.exit(0);
 		};
-		
+
 		process.on('SIGINT', () => shutdown('SIGINT'));
 		process.on('SIGTERM', () => shutdown('SIGTERM'));
-		
 	} catch (error) {
 		client.logger.fatal(error);
 		await client.destroy();

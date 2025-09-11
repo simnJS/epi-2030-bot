@@ -7,7 +7,6 @@ import { MessageFlags, ContainerBuilder, TextDisplayBuilder, TextChannel } from 
 	description: 'Generate a summary of the last 100 messages in this channel using GPT-4'
 })
 export class ResumeCommand extends Command {
-
 	public constructor(context: Command.LoaderContext, options: Command.Options) {
 		super(context, options);
 	}
@@ -27,10 +26,7 @@ export class ResumeCommand extends Command {
 							.setMaxValue(100)
 					)
 					.addBooleanOption((option) =>
-						option
-							.setName('ephemere')
-							.setDescription('Show summary only to you (true) or to everyone (false)')
-							.setRequired(false)
+						option.setName('ephemere').setDescription('Show summary only to you (true) or to everyone (false)').setRequired(false)
 					),
 			{
 				guildIds: ['1391769906944409662']
@@ -42,17 +38,15 @@ export class ResumeCommand extends Command {
 		try {
 			const messageCount = interaction.options.getInteger('messages') || 100;
 			const isEphemeral = interaction.options.getBoolean('ephemere') ?? true;
-			
+
 			const loadingComponent = [
 				new ContainerBuilder().addTextDisplayComponents(
 					new TextDisplayBuilder().setContent(`### 📝 Analyzing the last ${messageCount} messages...\n*This may take a few moments*`)
 				)
 			];
-			
-			const replyFlags = isEphemeral
-				? (MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral)
-				: MessageFlags.IsComponentsV2;
-			
+
+			const replyFlags = isEphemeral ? MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral : MessageFlags.IsComponentsV2;
+
 			await interaction.reply({
 				components: loadingComponent,
 				flags: replyFlags
@@ -68,9 +62,7 @@ export class ResumeCommand extends Command {
 
 			if (messageArray.length === 0) {
 				const noMessagesComponent = [
-					new ContainerBuilder().addTextDisplayComponents(
-						new TextDisplayBuilder().setContent(`### ❌ No messages found in this channel`)
-					)
+					new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ❌ No messages found in this channel`))
 				];
 				await interaction.editReply({
 					components: noMessagesComponent,
@@ -80,8 +72,8 @@ export class ResumeCommand extends Command {
 			}
 
 			const messageText = messageArray
-				.filter(msg => !msg.author.bot && msg.content.length > 0)
-				.map(msg => `[${msg.author.displayName || msg.author.username} (${msg.author.id})]: ${msg.content}`)
+				.filter((msg) => !msg.author.bot && msg.content.length > 0)
+				.map((msg) => `[${msg.author.displayName || msg.author.username} (${msg.author.id})]: ${msg.content}`)
 				.join('\n');
 
 			if (messageText.length === 0) {
@@ -102,7 +94,8 @@ export class ResumeCommand extends Command {
 				messages: [
 					{
 						role: 'system',
-						content: 'Tu es un assistant qui crée des résumés TRÈS concis de conversations Discord. Identifie uniquement LE sujet principal le plus important de la conversation et résume-le en 2-3 phrases maximum. Ignore les discussions secondaires, les blagues, et les détails non essentiels. Concentre-toi seulement sur les décisions importantes ou les informations cruciales. IMPORTANT: Quand tu mentionnes une personne, utilise le format <@userid>.'
+						content:
+							'Tu es un assistant qui crée des résumés TRÈS concis de conversations Discord. Identifie uniquement LE sujet principal le plus important de la conversation et résume-le en 2-3 phrases maximum. Ignore les discussions secondaires, les blagues, et les détails non essentiels. Concentre-toi seulement sur les décisions importantes ou les informations cruciales. IMPORTANT: Quand tu mentionnes une personne, utilise le format <@userid>.'
 					},
 					{
 						role: 'user',
@@ -114,10 +107,12 @@ export class ResumeCommand extends Command {
 			});
 
 			const summary = completion.choices[0]?.message?.content || 'Unable to generate summary';
-			
+
 			const summaryComponent = [
 				new ContainerBuilder().addTextDisplayComponents(
-					new TextDisplayBuilder().setContent(`## 📋 Channel Summary\n\n${summary}\n\n*Summary of ${messageArray.filter(msg => !msg.author.bot && msg.content.length > 0).length} messages*`)
+					new TextDisplayBuilder().setContent(
+						`## 📋 Channel Summary\n\n${summary}\n\n*Summary of ${messageArray.filter((msg) => !msg.author.bot && msg.content.length > 0).length} messages*`
+					)
 				)
 			];
 
@@ -125,14 +120,15 @@ export class ResumeCommand extends Command {
 				components: summaryComponent,
 				flags: replyFlags
 			});
-
 		} catch (error) {
 			this.container.logger.error('Error in resume command:', error);
-			
+
 			try {
 				const errorComponent = [
 					new ContainerBuilder().addTextDisplayComponents(
-						new TextDisplayBuilder().setContent(`### ❌ An error occurred while generating the summary\n*Please make sure OpenAI API key is configured*`)
+						new TextDisplayBuilder().setContent(
+							`### ❌ An error occurred while generating the summary\n*Please make sure OpenAI API key is configured*`
+						)
 					)
 				];
 				await interaction.editReply({
