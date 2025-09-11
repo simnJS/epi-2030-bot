@@ -6,6 +6,7 @@
   "license": "UNLICENSE",
   "type": "commonjs",
   "dependencies": {
+    "@prisma/client": "^6.15.0",
     "@sapphire/decorators": "^6.2.0",
     "@sapphire/discord.js-utilities": "7.3.2",
     "@sapphire/framework": "^5.3.2",
@@ -15,6 +16,7 @@
     "colorette": "^2.0.20",
     "discord.js": "^14.17.3",
     "openai": "^5.16.0",
+    "prisma": "^6.15.0",
     "yaml": "^2.8.1"
   },
   "devDependencies": {
