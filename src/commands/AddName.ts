@@ -1,18 +1,18 @@
-import config from '../config';
-
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
-import { MessageFlags, GuildMember, PermissionFlagsBits, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
+import { MessageFlags, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
-	description: 'Command to add name to pseudo'
+	name: 'add-name',
+	description: 'Command to add name to pseudo',
+	preconditions: ['AdminOnly']
 })
 export class AddNameCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry): Awaitable<void> {
 		registry.registerChatInputCommand(
 			(builder) =>
 				builder
-					.setName('add-name')
+					.setName(this.name)
 					.setDescription(this.description)
 					.addUserOption((option) => option.setName('target').setDescription('The user that you want to add name').setRequired(true))
 					.addStringOption((option) => option.setName('name').setDescription('Name of user').setRequired(true)),
@@ -21,17 +21,7 @@ export class AddNameCommand extends Command {
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-		const initialmember = interaction.member as GuildMember;
 		// Test comment for PR workflow
-
-		if (!initialmember.permissions.has(PermissionFlagsBits.Administrator) && !config.admins.includes(interaction.user.id)) {
-			const component = [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Permission denied`))];
-			await interaction.reply({
-				components: component,
-				flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
-			});
-			return;
-		}
 
 		const targetUser = interaction.options.getUser('target', true);
 		const name = interaction.options.getString('name', true);
