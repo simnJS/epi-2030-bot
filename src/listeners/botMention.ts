@@ -39,10 +39,18 @@ export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 					}
 				}
 				const author = (await channel.guild?.members.fetch(msg.author.id)) as GuildMember
-				contextTextParts.push(`[${author.displayName}]: ${msg.cleanContent}${replyInfo}`);
-			}
+				contextTextParts.push(
+				replyInfo
+					? `[${author.displayName}]: ${msg.cleanContent}\n  ↪ ${replyInfo}`
+					: `[${author.displayName}]: ${msg.cleanContent}`
+				);
 
-			const contextText = contextTextParts.join('\n');
+			}
+			const contextText = contextTextParts.length > 0 
+				? contextTextParts.join('\n') 
+				: "No previous messages in this conversation.";
+
+
 			let replyInfo = "";
 				if (message.reference?.messageId) {
 					try {
@@ -57,31 +65,35 @@ export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 				}
 
 			const usermember = (await channel.guild?.members.fetch(message.author.id)) as GuildMember
-			const userMessage = {author: usermember.displayName, message:message.cleanContent+ replyInfo};
+			const userMessage = {author: usermember.displayName, message:message.cleanContent + replyInfo};
 
 			console.log('Context text:', contextText);
-			console.log(`${userMessage.author} request's : ${userMessage.message}`);
+			console.log(`${userMessage.author}'s request : ${userMessage.message}`);
 
 			const completion = await this.container.groq.chat.completions.create({
 				model: 'openai/gpt-oss-20b',
 				messages: [
 					{
 						role: 'system',
-						content: `You are a chatbot called Epitech 2030 Bot that communicates naturally, like a real human. You receive three pieces of information:
-User message – the core instruction or question the user wants you to answer.
-Message history – the last 15 messages from the conversation, which may contain context.
-Your task:
-Respond in the language the user is speaking (usually French, but sometimes English).
-Use the message history to understand context and maintain continuity.
-If the user’s current request is unrelated to the previous messages, focus only on the user’s request.
-Give the most natural, human-like response possible, making it sound like a real person is replying.
-Never mention being an AI, a bot, or refer to instructions or prompts.
-Keep your tone friendly, clear, and coherent.
-Never send message that as more than 2000 character with space only 200 tokens max, try to be short`
+						content: `You are "Epitech 2030 Bot", a Discord member who chats naturally.
+You receive two things:
+1. The last 15 messages of the conversation, formatted as [Nickname (Real Name)]: message
+2. The user's request, formatted as [Nickname (Real Name)]: message
+If people request their real name use the real name receive by message history or user's request if people want their nickname same use just the nickname
+Your job:
+- Respond in the same language the user speaks (French or English)
+- Use the conversation history to keep continuity and context
+- If the user’s message is unrelated to previous messages, just answer it naturally
+- Sound like a real human talking in the channel
+- Be friendly, clear, and coherent`
+					},
+					{
+						role: 'system',
+						content: `Conversation history:\n${contextText}`
 					},
 					{
 						role: 'user',
-						content: `${userMessage.message} request's : "${userMessage.message} \nThe last messages send in channel :${contextText}`
+						content: `[${userMessage.author}]: ${userMessage.message}`
 					}
 				],
 				max_tokens: 50000
