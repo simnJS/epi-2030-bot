@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Events, Listener } from '@sapphire/framework';
-import type { Message, TextChannel } from 'discord.js';
+import type { Message, TextChannel, GuildMember } from 'discord.js';
 
 @ApplyOptions<Listener.Options>({
 	event: Events.MessageCreate
@@ -15,8 +15,6 @@ export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 
 		// Do nothing if we cannot send messages in the channel
 		if (!message.channel.isSendable()) return;
-
-		console.log('Bot mention detected in message:', message.content);
 
 		try {
 			const channel = message.channel as TextChannel;
@@ -33,23 +31,36 @@ export class BotMentionListener extends Listener<typeof Events.MessageCreate> {
 					try {
 						const repliedMessage = await channel.messages.fetch(msg.reference.messageId);
 						if (repliedMessage) {
-							replyInfo = ` (in reply to [${repliedMessage.author.displayName || repliedMessage.author.username}]: ${repliedMessage.content.slice(0, 50)}${repliedMessage.content.length > 50 ? "..." : ""})`;
+							const author = (await channel.guild?.members.fetch(repliedMessage.author.id)) as GuildMember
+							replyInfo = ` (in reply to [${author.displayName}]: ${repliedMessage.cleanContent.slice(0, 50)}${repliedMessage.content.length > 50 ? "..." : ""})`;
+						}
+					} catch {
+						replyInfo = " (reply to an inaccessible message)";
+					}
+				}
+				const author = (await channel.guild?.members.fetch(msg.author.id)) as GuildMember
+				contextTextParts.push(`[${author.displayName}]: ${msg.cleanContent}${replyInfo}`);
+			}
+
+			const contextText = contextTextParts.join('\n');
+			let replyInfo = "";
+				if (message.reference?.messageId) {
+					try {
+						const repliedMessage = await channel.messages.fetch(message.reference.messageId);
+						if (repliedMessage) {
+							const author = (await channel.guild?.members.fetch(repliedMessage.author.id)) as GuildMember
+							replyInfo = ` (in reply to [${author.displayName}]: ${repliedMessage.cleanContent.slice(0, 50)}${repliedMessage.content.length > 50 ? "..." : ""})`;
 						}
 					} catch {
 						replyInfo = " (reply to an inaccessible message)";
 					}
 				}
 
-				contextTextParts.push(`[${msg.author.displayName || msg.author.username}]: ${msg.content}${replyInfo}`);
-			}
-
-			const contextText = contextTextParts.join('\n');
-
-
-			const userMessage = message.content.replace(/<@!?\d+>/g, '').trim();
+			const usermember = (await channel.guild?.members.fetch(message.author.id)) as GuildMember
+			const userMessage = {author: usermember.displayName, message:message.cleanContent+ replyInfo};
 
 			console.log('Context text:', contextText);
-			console.log('User message:', userMessage);
+			console.log(`${userMessage.author} request's : ${userMessage.message}`);
 
 			const completion = await this.container.groq.chat.completions.create({
 				model: 'openai/gpt-oss-20b',
@@ -66,23 +77,23 @@ If the user’s current request is unrelated to the previous messages, focus onl
 Give the most natural, human-like response possible, making it sound like a real person is replying.
 Never mention being an AI, a bot, or refer to instructions or prompts.
 Keep your tone friendly, clear, and coherent.
-Never send message that as more than 2000 character with space only 200 tokens max, try to be short
-NEVER PING everyone OR HERE`
+Never send message that as more than 2000 character with space only 200 tokens max, try to be short`
 					},
 					{
 						role: 'user',
-						content: `The user says: "${userMessage}. Context of the last channel messages:${contextText}`
+						content: `${userMessage.message} request's : "${userMessage.message} \nThe last messages send in channel :${contextText}`
 					}
 				],
 				max_tokens: 50000
 			});
 
-			const response = completion.choices[0]?.message?.content;
+			const response = completion.choices[0]?.message?.content || "AI not responding";
+			const reponseWithoutEveryone = response.replace(/@(everyone|here)/g, "@j'aipasledroit").trim()
 
-			if (response && response.trim().length > 0) {
-				for (let i = 0; i < response.length; i += 2000) {
+			if (reponseWithoutEveryone && reponseWithoutEveryone.trim().length > 0) {
+				for (let i = 0; i < reponseWithoutEveryone.length; i += 2000) {
 					await message.channel.send({ 
-						content: response.slice(i, i + 2000), 
+						content: reponseWithoutEveryone.slice(i, i + 2000), 
 						reply: i === 0 ? { messageReference: message.id } : undefined 
 					});
 				}

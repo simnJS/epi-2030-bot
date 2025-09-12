@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Awaitable, Command } from '@sapphire/framework';
-import { MessageFlags, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
+import { MessageFlags, ContainerBuilder, TextDisplayBuilder, GuildMember } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
 	name: 'add-name',
@@ -26,7 +26,7 @@ export class AddNameCommand extends Command {
 		const targetUser = interaction.options.getUser('target', true);
 		const name = interaction.options.getString('name', true);
 
-		const member = await interaction.guild?.members.fetch(targetUser.id);
+		const member = await interaction.guild?.members.fetch(targetUser.id) as GuildMember
 		if (!member) {
 			const component = [
 				new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### User not found in this guild`))
