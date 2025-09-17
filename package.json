@@ -17,6 +17,7 @@
     "discord.js": "^14.17.3",
     "groq-sdk": "^0.7.0",
     "prisma": "^6.15.0",
+    "spotify-url-info": "^3.2.18",
     "yaml": "^2.8.1"
   },
   "devDependencies": {
