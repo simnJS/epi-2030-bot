@@ -38,7 +38,6 @@ export class DynamicStatusListener extends Listener {
 			status: 'online'
 		});
 
-		this.container.logger.info(`Status updated to: ${status.name} (${status.type})`);
 
 		this.statusIndex = (this.statusIndex + 1) % this.statuses.length;
 	}
